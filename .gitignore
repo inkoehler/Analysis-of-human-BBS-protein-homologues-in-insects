@@ -1,3 +1,3 @@
 # Ignore folders with filtered blast results
-human_vs_insect/*
-insect_vs_human/*
+data/human_vs_insect/*
+data/insect_vs_human/*
