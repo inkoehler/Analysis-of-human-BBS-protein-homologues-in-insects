@@ -47,3 +47,13 @@ human genome used: GRCh38.p14
         - data table created from the script that is used to create the plots
 
 
+## TODO
+
+- rewrite script
+- beautify figures
+- add OrthoFinder results to figure
+- genereate phylogenetic tree (similar to chytochrome5 paper)
+- plot tree
+- add methods and results part of phylogenetic reconstruction to paper
+
+
