@@ -52,7 +52,7 @@ human genome used: GRCh38.p14
 - rewrite script
 - beautify figures
 - add OrthoFinder results to figure
-- genereate phylogenetic tree (similar to chytochrome5 paper)
+- genereate phylogenetic tree (similar to [this](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8670302/#sup1) paper) (newick format)
 - plot tree
 - add methods and results part of phylogenetic reconstruction to paper
 
