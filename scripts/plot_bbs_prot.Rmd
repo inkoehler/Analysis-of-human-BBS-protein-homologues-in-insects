@@ -4,7 +4,8 @@ output: html_document
 date: "2023-12-11"
 ---
 
-```{r, message = FALSE}
+```{r, include = FALSE, message = FALSE}
+## Install packages if not already installed
 install.packages(c("tidyverse", 
                  "reshape2", 
                  "ggpubr", 
@@ -15,26 +16,35 @@ install.packages(c("tidyverse",
 
 1. Load libraries and set working directory:
 
-```{r, echo = FALSE, message = FALSE}
+```{r, setup, include = FALSE}
+## Load libraries and set global working directory
 library(tidyverse)
 library(reshape2)
 library(ggpubr)
 library(stringr)
 library(plyr)
 
-setwd("/home/ina/bbs_project")
+knitr::opts_knit$set(root.dir = '/home/ina/bbs_project')
 ```
 
-2. Load data and prepare functions:
+2.1 Load already prepared data and skip step 2.2 and 3:
+
+The table created in this script and used for the plots can be saved at the end. If only changes with the plots are made, the table can be loaded here and the next steps can be skipped
+
+```{r, include = FALSE}
+data_sub <- read.table(file = "data/bbs_results_plot.txt", header = TRUE)
+```
+
+2.2 Load data and prepare functions:
 
 ```{r, message = FALSE}
 ## Read in species list:
-species_list <- read.table(file = "bbs_list2.txt",
+species_list <- read.table(file = "data/bbs_list2.txt",
                            header = FALSE)
 species_list[species_list == "x"] <- NA
 species_list <- species_list[order(species_list$V2), ]
 
-species_names <- read.table(file = "species_names.txt", 
+species_names <- read.table(file = "data/species_names.txt", 
                             header = FALSE,
                             sep = "\t")
 
@@ -47,9 +57,10 @@ replace_values <- function(X) {
         # Check if a match is found
         if (length(matching_row) == 1) {
           # Replace the entry in X with the value from the second column of Y
-          X$V1[i] <- species_names$V3[matching_row]
+          X$V1[i] <- species_names$V4[matching_row]
         }
     }
+    # Replace column names
     names(X)[names(X) == "V1"] <- "species"
     names(X)[names(X) == "V4"] <- "pident"
     names(X)[names(X) == "V5"] <- "length"
@@ -65,6 +76,23 @@ replace_values <- function(X) {
     return(X)
 }
 
+replace_col_names_OF <- function(dataset, V1, V2) {
+    names(dataset)[names(dataset) == "V1"] <- V1
+    names(dataset)[names(dataset) == "V2"] <- V2
+    names(dataset)[names(dataset) == "V3"] <- "pident"
+    names(dataset)[names(dataset) == "V4"] <- "length"
+    names(dataset)[names(dataset) == "V5"] <- "mismatch"
+    names(dataset)[names(dataset) == "V6"] <- "gapopen"
+    names(dataset)[names(dataset) == "V7"] <- "qstart"
+    names(dataset)[names(dataset) == "V8"] <- "qend"
+    names(dataset)[names(dataset) == "V9"] <- "sstart"
+    names(dataset)[names(dataset) == "V10"] <- "send"
+    names(dataset)[names(dataset) == "V11"] <- "evalue"
+    names(dataset)[names(dataset) == "V12"] <- "bitscore"
+    return(dataset)
+}
+
+## Create table with max bitscore for each gene in each species
 subset_max_bitscore <- function(data_frame) {
   data_frame %>%
     group_by(species) %>%
@@ -75,18 +103,20 @@ subset_max_bitscore <- function(data_frame) {
 
 ```
 
-3. Load percentage identity data:
+3. Load percentage identity data from blastp search:
 
-```{r , echo=FALSE}
+Does the same for every gene: Loads the blastp results for the human against insect blast and calls the function replace_values on the data. After that, the correct column names are set. The same is done for the blast results for insect against human. The two datasets are combined into one and an additional column with the gene name is added.
+
+```{r , include = FALSE}
 
 ## BBS1
-bbs1_data_human <- read.table(file = "human_vs_insect/NP_078925.3.txt",
+bbs1_data_human <- read.table(file = "data/human_vs_insect/NP_078925.3.txt",
                    header = FALSE)
 bbs1_data_human <- replace_values(bbs1_data_human)
 names(bbs1_data_human)[names(bbs1_data_human) == "V2"] <- "human_ID"
 names(bbs1_data_human)[names(bbs1_data_human) == "V3"] <- "insect_ID"
 
-bbs1_data_insect <- read.table(file = "insect_vs_human/unranked/NP_078925.3_unranked.txt",
+bbs1_data_insect <- read.table(file = "data/insect_vs_human/unranked/NP_078925.3_unranked.txt",
                                header = FALSE)
 bbs1_data_insect <- replace_values(bbs1_data_insect)
 names(bbs1_data_insect)[names(bbs1_data_insect) == "V3"] <- "human_ID"
@@ -96,16 +126,16 @@ bbs1_data <- left_join(bbs1_data_human, bbs1_data_insect, by=c("human_ID", "spec
 bbs1_data$locus <-  "BBS1"
 
 ## BBS2
-bbs2_filepaths_human <- c("human_vs_insect/NP_001364385.1.txt", 
-                   "human_vs_insect/NP_114091.4.txt")
+bbs2_filepaths_human <- c("data/human_vs_insect/NP_001364385.1.txt", 
+                   "data/human_vs_insect/NP_114091.4.txt")
 bbs2_data_human <- ldply(bbs2_filepaths_human, read.table, header = FALSE)
 bbs2_data_human <- replace_values(bbs2_data_human)
 names(bbs2_data_human)[names(bbs2_data_human) == "V2"] <- "human_ID"
 names(bbs2_data_human)[names(bbs2_data_human) == "V3"] <- "insect_ID"
 bbs2_data_human <- subset_max_bitscore(bbs2_data_human)
 
-bbs2_filepaths_insect <- c("insect_vs_human/unranked/NP_001364385.1_unranked.txt", 
-                   "insect_vs_human/unranked/NP_114091.4_unranked.txt")
+bbs2_filepaths_insect <- c("data/insect_vs_human/unranked/NP_001364385.1_unranked.txt", 
+                   "data/insect_vs_human/unranked/NP_114091.4_unranked.txt")
 bbs2_data_insect <- ldply(bbs2_filepaths_insect, read.table, header = FALSE)
 bbs2_data_insect <- replace_values(bbs2_data_insect)
 names(bbs2_data_insect)[names(bbs2_data_insect) == "V3"] <- "human_ID"
@@ -115,18 +145,18 @@ bbs2_data <- left_join(bbs2_data_human, bbs2_data_insect, by=c("human_ID", "spec
 bbs2_data$locus <-  "BBS2"
 
 ## BBS4
-bbs4_filepaths_human <- c("human_vs_insect/NP_149017.2.txt", 
-                   "human_vs_insect/NP_001307594.1.txt",
-                   "human_vs_insect/NP_001239607.1.txt")
+bbs4_filepaths_human <- c("data/human_vs_insect/NP_149017.2.txt", 
+                   "data/human_vs_insect/NP_001307594.1.txt",
+                   "data/human_vs_insect/NP_001239607.1.txt")
 bbs4_data_human <- ldply(bbs4_filepaths_human, read.table, header = FALSE)
 bbs4_data_human <- replace_values(bbs4_data_human)
 names(bbs4_data_human)[names(bbs4_data_human) == "V2"] <- "human_ID"
 names(bbs4_data_human)[names(bbs4_data_human) == "V3"] <- "insect_ID"
 bbs4_data_human <- subset_max_bitscore(bbs4_data_human)
 
-bbs4_filepaths_insect <- c("insect_vs_human/unranked/NP_149017.2_unranked.txt", 
-                   "insect_vs_human/unranked/NP_001307594.1_unranked.txt",
-                   "insect_vs_human/unranked/NP_001239607.1_unranked.txt")
+bbs4_filepaths_insect <- c("data/insect_vs_human/unranked/NP_149017.2_unranked.txt", 
+                   "data/insect_vs_human/unranked/NP_001307594.1_unranked.txt",
+                   "data/insect_vs_human/unranked/NP_001239607.1_unranked.txt")
 bbs4_data_insect <- ldply(bbs4_filepaths_insect, read.table, header = FALSE)
 bbs4_data_insect <- replace_values(bbs4_data_insect)
 names(bbs4_data_insect)[names(bbs4_data_insect) == "V3"] <- "human_ID"
@@ -137,14 +167,14 @@ bbs4_data$locus <-  "BBS4"
 
 
 ## BBS5
-bbs5_data_human <- read.table(file = "human_vs_insect/NP_689597.1.txt",
+bbs5_data_human <- read.table(file = "data/human_vs_insect/NP_689597.1.txt",
                    header = FALSE)
 bbs5_data_human <- replace_values(bbs5_data_human)
 names(bbs5_data_human)[names(bbs5_data_human) == "V2"] <- "human_ID"
 names(bbs5_data_human)[names(bbs5_data_human) == "V3"] <- "insect_ID"
 bbs5_data_human <- subset_max_bitscore(bbs5_data_human)
 
-bbs5_data_insect <- read.table(file = "insect_vs_human/unranked/NP_689597.1_unranked.txt",
+bbs5_data_insect <- read.table(file = "data/insect_vs_human/unranked/NP_689597.1_unranked.txt",
                                header = FALSE)
 bbs5_data_insect <- replace_values(bbs5_data_insect)
 names(bbs5_data_insect)[names(bbs5_data_insect) == "V3"] <- "human_ID"
@@ -155,16 +185,16 @@ bbs5_data$locus <-  "BBS5"
 
 
 ## BBS7
-bbs7_filepaths_human <- c("human_vs_insect/NP_060660.2.txt", 
-                   "human_vs_insect/NP_789794.1.txt")
+bbs7_filepaths_human <- c("data/human_vs_insect/NP_060660.2.txt", 
+                   "data/human_vs_insect/NP_789794.1.txt")
 bbs7_data_human <- ldply(bbs7_filepaths_human, read.table, header = FALSE)
 bbs7_data_human <- replace_values(bbs7_data_human)
 names(bbs7_data_human)[names(bbs7_data_human) == "V2"] <- "human_ID"
 names(bbs7_data_human)[names(bbs7_data_human) == "V3"] <- "insect_ID"
 bbs7_data_human <- subset_max_bitscore(bbs7_data_human)
 
-bbs7_filepaths_insect <- c("insect_vs_human/unranked/NP_060660.2_unranked.txt", 
-                   "insect_vs_human/unranked/NP_789794.1_unranked.txt")
+bbs7_filepaths_insect <- c("data/insect_vs_human/unranked/NP_060660.2_unranked.txt", 
+                   "data/insect_vs_human/unranked/NP_789794.1_unranked.txt")
 bbs7_data_insect <- ldply(bbs7_filepaths_insect, read.table, header = FALSE)
 bbs7_data_insect <- replace_values(bbs7_data_insect)
 names(bbs7_data_insect)[names(bbs7_data_insect) == "V3"] <- "human_ID"
@@ -175,28 +205,28 @@ bbs7_data$locus <-  "BBS7"
 
 
 ## BBS8
-bbs8_filepaths_human <- c("human_vs_insect/NP_653197.2.txt", 
-                   "human_vs_insect/NP_938051.1.txt",
-                   "human_vs_insect/NP_938052.1.txt",
-                   "human_vs_insect/NP_001275710.1.txt",
-                   "human_vs_insect/NP_001275711.1.txt",
-                   "human_vs_insect/NP_001275712.1.txt",
-                   "human_vs_insect/NP_001353464.1.txt",
-                   "human_vs_insect/NP_001353465.1.txt")
+bbs8_filepaths_human <- c("data/human_vs_insect/NP_653197.2.txt", 
+                   "data/human_vs_insect/NP_938051.1.txt",
+                   "data/human_vs_insect/NP_938052.1.txt",
+                   "data/human_vs_insect/NP_001275710.1.txt",
+                   "data/human_vs_insect/NP_001275711.1.txt",
+                   "data/human_vs_insect/NP_001275712.1.txt",
+                   "data/human_vs_insect/NP_001353464.1.txt",
+                   "data/human_vs_insect/NP_001353465.1.txt")
 bbs8_data_human <- ldply(bbs8_filepaths_human, read.table, header = FALSE)
 bbs8_data_human <- replace_values(bbs8_data_human)
 names(bbs8_data_human)[names(bbs8_data_human) == "V2"] <- "human_ID"
 names(bbs8_data_human)[names(bbs8_data_human) == "V3"] <- "insect_ID"
 bbs8_data_human <- subset_max_bitscore(bbs8_data_human)
 
-bbs8_filepaths_insect <- c("insect_vs_human/unranked/NP_653197.2_unranked.txt", 
-                   "insect_vs_human/unranked/NP_938051.1_unranked.txt",
-                   "insect_vs_human/unranked/NP_938052.1_unranked.txt",
-                   "insect_vs_human/unranked/NP_001275710.1_unranked.txt",
-                   "insect_vs_human/unranked/NP_001275711.1_unranked.txt",
-                   "insect_vs_human/unranked/NP_001275712.1_unranked.txt",
-                   "insect_vs_human/unranked/NP_001353464.1_unranked.txt",
-                   "insect_vs_human/unranked/NP_001353465.1_unranked.txt")
+bbs8_filepaths_insect <- c("data/insect_vs_human/unranked/NP_653197.2_unranked.txt", 
+                   "data/insect_vs_human/unranked/NP_938051.1_unranked.txt",
+                   "data/insect_vs_human/unranked/NP_938052.1_unranked.txt",
+                   "data/insect_vs_human/unranked/NP_001275710.1_unranked.txt",
+                   "data/insect_vs_human/unranked/NP_001275711.1_unranked.txt",
+                   "data/insect_vs_human/unranked/NP_001275712.1_unranked.txt",
+                   "data/insect_vs_human/unranked/NP_001353464.1_unranked.txt",
+                   "data/insect_vs_human/unranked/NP_001353465.1_unranked.txt")
 bbs8_data_insect <- ldply(bbs8_filepaths_insect, read.table, header = FALSE)
 bbs8_data_insect <- replace_values(bbs8_data_insect)
 names(bbs8_data_insect)[names(bbs8_data_insect) == "V3"] <- "human_ID"
@@ -206,44 +236,44 @@ bbs8_data <- left_join(bbs8_data_human, bbs8_data_insect, by=c("human_ID", "spec
 bbs8_data$locus <-  "BBS8"
 
 ## BBS9
-bbs9_filepaths_human <- c("human_vs_insect/NP_055266.2.txt", 
-                   "human_vs_insect/NP_940820.1.txt",
-                   "human_vs_insect/NP_001028776.1.txt",
-                   "human_vs_insect/NP_001028777.1.txt",
-                   "human_vs_insect/NP_001334965.1.txt",
-                   "human_vs_insect/NP_001334966.1.txt",
-                   "human_vs_insect/NP_001334967.1.txt",
-                   "human_vs_insect/NP_001334968.1.txt",
-                   "human_vs_insect/NP_001334969.1.txt",
-                   "human_vs_insect/NP_001334970.1.txt",
-                   "human_vs_insect/NP_001334971.1.txt",
-                   "human_vs_insect/NP_001334972.1.txt",
-                   "human_vs_insect/NP_001334973.1.txt",
-                   "human_vs_insect/NP_001334974.1.txt",
-                   "human_vs_insect/NP_001334975.1.txt",
-                   "human_vs_insect/NP_001349608.1.txt")
+bbs9_filepaths_human <- c("data/human_vs_insect/NP_055266.2.txt", 
+                   "data/human_vs_insect/NP_940820.1.txt",
+                   "data/human_vs_insect/NP_001028776.1.txt",
+                   "data/human_vs_insect/NP_001028777.1.txt",
+                   "data/human_vs_insect/NP_001334965.1.txt",
+                   "data/human_vs_insect/NP_001334966.1.txt",
+                   "data/human_vs_insect/NP_001334967.1.txt",
+                   "data/human_vs_insect/NP_001334968.1.txt",
+                   "data/human_vs_insect/NP_001334969.1.txt",
+                   "data/human_vs_insect/NP_001334970.1.txt",
+                   "data/human_vs_insect/NP_001334971.1.txt",
+                   "data/human_vs_insect/NP_001334972.1.txt",
+                   "data/human_vs_insect/NP_001334973.1.txt",
+                   "data/human_vs_insect/NP_001334974.1.txt",
+                   "data/human_vs_insect/NP_001334975.1.txt",
+                   "data/human_vs_insect/NP_001349608.1.txt")
 bbs9_data_human <- ldply(bbs9_filepaths_human, read.table, header = FALSE)
 bbs9_data_human <- replace_values(bbs9_data_human)
 names(bbs9_data_human)[names(bbs9_data_human) == "V2"] <- "human_ID"
 names(bbs9_data_human)[names(bbs9_data_human) == "V3"] <- "insect_ID"
 bbs9_data_human <- subset_max_bitscore(bbs9_data_human)
 
-bbs9_filepaths_insect <- c("insect_vs_human/unranked/NP_055266.2_unranked.txt",
-                           "insect_vs_human/unranked/NP_940820.1_unranked.txt",
-                           "insect_vs_human/unranked/NP_001028776.1_unranked.txt",
-                           "insect_vs_human/unranked/NP_001028777.1_unranked.txt",
-                           "insect_vs_human/unranked/NP_001334965.1_unranked.txt",
-                           "insect_vs_human/unranked/NP_001334966.1_unranked.txt",
-                           "insect_vs_human/unranked/NP_001334967.1_unranked.txt",
-                           "insect_vs_human/unranked/NP_001334968.1_unranked.txt",
-                           "insect_vs_human/unranked/NP_001334969.1_unranked.txt",
-                           "insect_vs_human/unranked/NP_001334970.1_unranked.txt",
-                           "insect_vs_human/unranked/NP_001334971.1_unranked.txt",
-                           "insect_vs_human/unranked/NP_001334972.1_unranked.txt",
-                           "insect_vs_human/unranked/NP_001334973.1_unranked.txt",
-                           "insect_vs_human/unranked/NP_001334974.1_unranked.txt",
-                           "insect_vs_human/unranked/NP_001334975.1_unranked.txt",
-                           "insect_vs_human/unranked/NP_001349608.1_unranked.txt")
+bbs9_filepaths_insect <- c("data/insect_vs_human/unranked/NP_055266.2_unranked.txt",
+                           "data/insect_vs_human/unranked/NP_940820.1_unranked.txt",
+                           "data/insect_vs_human/unranked/NP_001028776.1_unranked.txt",
+                           "data/insect_vs_human/unranked/NP_001028777.1_unranked.txt",
+                           "data/insect_vs_human/unranked/NP_001334965.1_unranked.txt",
+                           "data/insect_vs_human/unranked/NP_001334966.1_unranked.txt",
+                           "data/insect_vs_human/unranked/NP_001334967.1_unranked.txt",
+                           "data/insect_vs_human/unranked/NP_001334968.1_unranked.txt",
+                           "data/insect_vs_human/unranked/NP_001334969.1_unranked.txt",
+                           "data/insect_vs_human/unranked/NP_001334970.1_unranked.txt",
+                           "data/insect_vs_human/unranked/NP_001334971.1_unranked.txt",
+                           "data/insect_vs_human/unranked/NP_001334972.1_unranked.txt",
+                           "data/insect_vs_human/unranked/NP_001334973.1_unranked.txt",
+                           "data/insect_vs_human/unranked/NP_001334974.1_unranked.txt",
+                           "data/insect_vs_human/unranked/NP_001334975.1_unranked.txt",
+                           "data/insect_vs_human/unranked/NP_001349608.1_unranked.txt")
 bbs9_data_insect <- ldply(bbs9_filepaths_insect, read.table, header = FALSE)
 bbs9_data_insect <- replace_values(bbs9_data_insect)
 names(bbs9_data_insect)[names(bbs9_data_insect) == "V3"] <- "human_ID"
@@ -253,14 +283,14 @@ bbs9_data <- left_join(bbs9_data_human, bbs9_data_insect, by=c("human_ID", "spec
 bbs9_data$locus <-  "BBS9"
 
 ## BBS10
-bbs10_data_human <- read.table(file = "human_vs_insect/NP_078961.3.txt",
+bbs10_data_human <- read.table(file = "data/human_vs_insect/NP_078961.3.txt",
                    header = FALSE)
 bbs10_data_human <- replace_values(bbs10_data_human)
 names(bbs10_data_human)[names(bbs10_data_human) == "V2"] <- "human_ID"
 names(bbs10_data_human)[names(bbs10_data_human) == "V3"] <- "insect_ID"
 bbs10_data_human <- subset_max_bitscore(bbs10_data_human)
 
-bbs10_data_insect <- read.table(file = "insect_vs_human/unranked/NP_078961.3_unranked.txt",
+bbs10_data_insect <- read.table(file = "data/insect_vs_human/unranked/NP_078961.3_unranked.txt",
                                header = FALSE)
 bbs10_data_insect <- replace_values(bbs10_data_insect)
 names(bbs10_data_insect)[names(bbs10_data_insect) == "V3"] <- "human_ID"
@@ -270,16 +300,16 @@ bbs10_data <- left_join(bbs10_data_human, bbs10_data_insect, by=c("human_ID", "s
 bbs10_data$locus <-  "BBS10"
 
 ## BBS12
-bbs12_filepaths_human <- c("human_vs_insect/NP_001171478.1.txt", 
-                   "human_vs_insect/NP_689831.2.txt")
+bbs12_filepaths_human <- c("data/human_vs_insect/NP_001171478.1.txt", 
+                   "data/human_vs_insect/NP_689831.2.txt")
 bbs12_data_human <- ldply(bbs12_filepaths_human, read.table, header = FALSE)
 bbs12_data_human <- replace_values(bbs12_data_human)
 names(bbs12_data_human)[names(bbs12_data_human) == "V2"] <- "human_ID"
 names(bbs12_data_human)[names(bbs12_data_human) == "V3"] <- "insect_ID"
 bbs12_data_human <- subset_max_bitscore(bbs12_data_human)
 
-bbs12_filepaths_insect <- c("insect_vs_human/unranked/NP_001171478.1_unranked.txt", 
-                   "insect_vs_human/unranked/NP_689831.2_unranked.txt")
+bbs12_filepaths_insect <- c("data/insect_vs_human/unranked/NP_001171478.1_unranked.txt", 
+                   "data/insect_vs_human/unranked/NP_689831.2_unranked.txt")
 bbs12_data_insect <- ldply(bbs12_filepaths_insect, read.table, header = FALSE)
 bbs12_data_insect <- replace_values(bbs12_data_insect)
 names(bbs12_data_insect)[names(bbs12_data_insect) == "V3"] <- "human_ID"
@@ -289,20 +319,20 @@ bbs12_data <- left_join(bbs12_data_human, bbs12_data_insect, by=c("human_ID", "s
 bbs12_data$locus <-  "BBS12"
 
 ## BBS18
-bbs18_filepaths_human <- c("human_vs_insect/NP_001182234.1.txt",
-                   "human_vs_insect/NP_001182235.1.txt",
-                   "human_vs_insect/NP_001182236.1.txt",
-                   "human_vs_insect/NP_001230712.1.txt")
+bbs18_filepaths_human <- c("data/human_vs_insect/NP_001182234.1.txt",
+                   "data/human_vs_insect/NP_001182235.1.txt",
+                   "data/human_vs_insect/NP_001182236.1.txt",
+                   "data/human_vs_insect/NP_001230712.1.txt")
 bbs18_data_human <- ldply(bbs18_filepaths_human, read.table, header = FALSE)
 bbs18_data_human <- replace_values(bbs18_data_human)
 names(bbs18_data_human)[names(bbs18_data_human) == "V2"] <- "human_ID"
 names(bbs18_data_human)[names(bbs18_data_human) == "V3"] <- "insect_ID"
 bbs18_data_human <- subset_max_bitscore(bbs18_data_human)
 
-bbs18_filepaths_insect <- c("insect_vs_human/unranked/NP_001182234.1_unranked.txt", 
-                   "insect_vs_human/unranked/NP_001182235.1_unranked.txt",
-                   "insect_vs_human/unranked/NP_001182236.1_unranked.txt",
-                   "insect_vs_human/unranked/NP_001230712.1_unranked.txt")
+bbs18_filepaths_insect <- c("data/insect_vs_human/unranked/NP_001182234.1_unranked.txt", 
+                   "data/insect_vs_human/unranked/NP_001182235.1_unranked.txt",
+                   "data/insect_vs_human/unranked/NP_001182236.1_unranked.txt",
+                   "data/insect_vs_human/unranked/NP_001230712.1_unranked.txt")
 bbs18_data_insect <- ldply(bbs18_filepaths_insect, read.table, header = FALSE)
 bbs18_data_insect <- replace_values(bbs18_data_insect)
 names(bbs18_data_insect)[names(bbs18_data_insect) == "V3"] <- "human_ID"
@@ -313,24 +343,21 @@ bbs18_data$locus <-  "BBS18"
 
 
 
+## All tables generated for each gene are combined into one big table.
+combined_data_BLAST <-  rbind(bbs1_data,
+                              bbs2_data,
+                              bbs4_data,
+                              bbs5_data,
+                              bbs7_data,
+                              bbs8_data,
+                              bbs9_data,
+                              bbs10_data,
+                              bbs12_data,
+                              bbs18_data)
 
-combined_data <-  rbind(bbs1_data,
-                        bbs2_data,
-                        bbs4_data,
-                        bbs5_data,
-                        bbs7_data,
-                        bbs8_data,
-                        bbs9_data,
-                        bbs10_data,
-                        bbs12_data,
-                        bbs18_data)
-
-print("Done!")
-```
-
-
-```{r}
-data_sub <- combined_data %>%
+#combined_data_BLAST$origin <- "BLASTP"
+## A subset of the data is created with only the columns needed for the plots
+data_sub_BLAST <- combined_data_BLAST %>%
   select(human_ID,
          insect_ID.x,
          pident.x,
@@ -342,88 +369,220 @@ data_sub <- combined_data %>%
          species)
 
 
-#data_sub$species <-  str_to_title(data_sub$species)
-data_sub$pident.x <- as.numeric(data_sub$pident.x)
-data_sub$pident.y <- as.numeric(data_sub$pident.y)
-data_sub$pident.x[is.na(data_sub$pident.x)] <- 0
-data_sub$pident.y[is.na(data_sub$pident.y)] <- 0
+#data_sub_BLAST$species <-  str_to_title(data_sub_BLAST$species)
+data_sub_BLAST$pident.x <- as.numeric(data_sub_BLAST$pident.x)
+data_sub_BLAST$pident.y <- as.numeric(data_sub_BLAST$pident.y)
+data_sub_BLAST$pident.x[is.na(data_sub_BLAST$pident.x)] <- 0
+data_sub_BLAST$pident.y[is.na(data_sub_BLAST$pident.y)] <- 0
+
+data_sub_BLAST <- subset(data_sub_BLAST,
+                   species != "h_sapiens.fa")
+data_sub_BLAST <- subset(data_sub_BLAST,
+                   species != "m_musculus.fa")
+
+# Separate the numeric and non-numeric parts
+data_sub_BLAST <- data_sub_BLAST %>%
+  mutate(
+    number = as.numeric(str_extract(locus, "\\d+")),
+    locus = factor(locus, levels = unique(locus[order(number)]))
+  )
+
+## Update levels for plots:
+data_sub_BLAST$species <- factor(data_sub_BLAST$species,
+                         levels = unique(data_sub_BLAST$species))
+
+print("Done!")
+```
+
+4. Load percentage identity data from OrthoFinder search:
+
+```{r, include = FALSE}
+## Read in species list:
+species_list_orthofinder <- read.table(file = "data/OrthoFinder/SpeciesIDs.txt",
+                           header = FALSE, sep = "\t")
+
+species_list_ordered <- species_list_orthofinder[order(species_list_orthofinder$V1), ]
+
+## BBS1
+bbs1_data_human_OF <- read.table(file = "data/OrthoFinder/5_29768_match.txt",
+                   header = FALSE)
+bbs1_data_human_OF <- replace_col_names_OF(bbs1_data_human_OF, "human_ID", "insect_ID")
+bbs1_data_human_OF$species <- species_list_ordered$V2
+
+bbs1_data_insect_OF <- read.table(file = "data/OrthoFinder/5_29768_rep_match.txt",
+                   header = FALSE)
+bbs1_data_insect_OF <- replace_col_names_OF(bbs1_data_insect_OF, "insect_ID", "human_ID")
+bbs1_data_insect_OF$species <- species_list_ordered$V2
+
+bbs1_data_OF <- left_join(bbs1_data_human_OF, bbs1_data_insect_OF, by=c("human_ID", "species"))
+bbs1_data_OF$locus <- "BBS1"
+
+## BBS2
+bbs2_data_human_OF <- read.table(file = "data/OrthoFinder/5_30321_match.txt",
+                   header = FALSE)
+bbs2_data_human_OF <- replace_col_names_OF(bbs2_data_human_OF, "human_ID", "insect_ID")
+bbs2_data_human_OF$species <- species_list_ordered$V2[-8]
+
+bbs2_data_insect_OF <- read.table(file = "data/OrthoFinder/5_30321_rep_match.txt",
+                   header = FALSE)
+bbs2_data_insect_OF <- replace_col_names_OF(bbs2_data_insect_OF, "insect_ID", "human_ID")
+bbs2_data_insect_OF$species <- species_list_ordered$V2[-8]
+
+bbs2_data_OF <- left_join(bbs2_data_human_OF, bbs2_data_insect_OF, by=c("human_ID", "species"))
+bbs2_data_OF$locus <- "BBS2"
+
+## BBS4
+bbs4_data_human_OF <- read.table(file = "data/OrthoFinder/5_30864_match.txt",
+                   header = FALSE)
+bbs4_data_human_OF <- replace_col_names_OF(bbs4_data_human_OF, "human_ID", "insect_ID")
+bbs4_data_human_OF$species <- species_list_ordered$V2
+
+bbs4_data_insect_OF <- read.table(file = "data/OrthoFinder/5_30864_rep_match.txt",
+                   header = FALSE)
+bbs4_data_insect_OF <- replace_col_names_OF(bbs4_data_insect_OF, "insect_ID", "human_ID")
+bbs4_data_insect_OF$species <- species_list_ordered$V2
+
+bbs4_data_OF <- left_join(bbs4_data_human_OF, bbs4_data_insect_OF, by=c("human_ID", "species"))
+bbs4_data_OF$locus <- "BBS4"
+
+## BBS5
+bbs5_data_human_OF <- read.table(file = "data/OrthoFinder/5_32419_match.txt",
+                   header = FALSE)
+bbs5_data_human_OF <- replace_col_names_OF(bbs5_data_human_OF, "human_ID", "insect_ID")
+bbs5_data_human_OF$species <- species_list_ordered$V2
+
+bbs5_data_insect_OF <- read.table(file = "data/OrthoFinder/5_32419_rep_match.txt",
+                   header = FALSE)
+bbs5_data_insect_OF <- replace_col_names_OF(bbs5_data_insect_OF, "insect_ID", "human_ID")
+bbs5_data_insect_OF$species <- species_list_ordered$V2
+
+bbs5_data_OF <- left_join(bbs5_data_human_OF, bbs5_data_insect_OF, by=c("human_ID", "species"))
+bbs5_data_OF$locus <- "BBS5"
+
+## BBS7
+bbs7_data_human_OF <- read.table(file = "data/OrthoFinder/5_33401_match.txt",
+                   header = FALSE)
+bbs7_data_human_OF <- replace_col_names_OF(bbs7_data_human_OF, "human_ID", "insect_ID")
+bbs7_data_human_OF$species <- species_list_ordered$V2[-8]
+
+bbs7_data_insect_OF <- read.table(file = "data/OrthoFinder/5_33401_rep_match.txt",
+                   header = FALSE)
+bbs7_data_insect_OF <- replace_col_names_OF(bbs7_data_insect_OF, "insect_ID", "human_ID")
+bbs7_data_insect_OF$species <- species_list_ordered$V2[-8]
+
+bbs7_data_OF <- left_join(bbs7_data_human_OF, bbs7_data_insect_OF, by=c("human_ID", "species"))
+bbs7_data_OF$locus <- "BBS7"
+
+
+
+
+## Combine:
+combined_data_OF <-  rbind(bbs1_data_OF,
+                        bbs2_data_OF,
+                        bbs4_data_OF,
+                        bbs5_data_OF,
+                        bbs7_data_OF
+                        )
+
+#combined_data_OF$origin <- "OF"
+data_sub_OF <- combined_data_OF %>%
+  select(human_ID,
+         insect_ID.x,
+         pident.x,
+         pident.y,
+         evalue.x,
+         bitscore.x,
+         bitscore.y,
+         locus,
+         species,
+         origin)
+
+
+#data_sub_OF$species <-  str_to_title(data_sub_OF$species)
+data_sub_OF$pident.x <- as.numeric(data_sub_OF$pident.x)
+data_sub_OF$pident.y <- as.numeric(data_sub_OF$pident.y)
+data_sub_OF$pident.x[is.na(data_sub_OF$pident.x)] <- 0
+data_sub_OF$pident.y[is.na(data_sub_OF$pident.y)] <- 0
+
+data_sub_OF <- subset(data_sub_OF,
+                   species != "h_sapiens.fa")
+data_sub_OF <- subset(data_sub_OF,
+                   species != "m_musculus.fa")
+
+# Separate the numeric and non-numeric parts
+data_sub_OF <- data_sub_OF %>%
+  mutate(
+    number = as.numeric(str_extract(locus, "\\d+")),
+    locus = factor(locus, levels = unique(locus[order(number)]))
+  )
+
+## Update levels for plots:
+data_sub_OF$species <- factor(data_sub_OF$species,
+                         levels = unique(data_sub_OF$species))
 
 ```
 
+6. Plot data:
 
-5. Plot data:
+```{r, echo = FALSE}
 
-```{r, message = FALSE}
-
-## Update levels for plots:
-data_sub$species <- factor(data_sub$species,
-                         levels = unique(data_sub$species))
+## Create variable with colors
+color_ID <- c("#FF0000", "#008000", "#0000FF", "#FFA500", "#800080",
+              "#00FFFF", "#FF00FF", "#00FF00", "#808000", "#ffff00","#800000")
 
 
-## a) plot by gene:
-seq_sim_plot <- ggplot(data = data_sub,
+## function for plot by gene:
+seq_sim_plot <- function(data_sub, point_shape){
+  ggplot(data = data_sub,
        aes(x = pident.x,
-           y = pident.y,
-           fill = species)) +
-  xlab("Human vs Insect (top match) - Percentage ID [%]") +
-  ylab("Insect vs Human (unranked) - Percentage ID [%]") +
-  geom_point(alpha = 0.8,
-       colour = "black",
-       pch = 21,
-       size = 5) +
-  scale_fill_manual(values = c("#FF0000", "#008000", "#0000FF", "#FFA500", "#800080", 
-                                "#00FFFF", "#FF00FF", "#00FF00", "#808000", "#ffff00", 
-                                "#800000")) +
+           y = pident.y)) +
+  xlab(expression(paste(italic("H. sapiens"), " vs Insect - Percentage ID [%]"))) +
+  ylab(expression(paste("Insect vs ", italic("H. sapiens"), " - Percentage ID [%]"))) +
+  geom_point(aes(fill = species, color = species),
+             stroke = 0.5,
+             alpha = 0.8,
+             shape = point_shape,
+             size = 5
+             ) +
+  scale_color_manual(values = color_ID) +
+  scale_fill_manual(values = color_ID) +
   theme_bw() +
   theme(axis.title = element_text(face = "bold",
                                   size = 12),
         legend.text = element_text(face = "italic",
                                    size = 10),
-        legend.position = "bottom") +
+        legend.position = c(1, 0),
+                     legend.justification = c(1, 0.1),
+        legend.direction = "horizontal",
+        ) +
+  guides(colour = guide_legend(title.position = "top")) +
   facet_wrap(~locus,
              nrow = 3,
              ncol = 4)
+}
 
-seq_sim_plot <- seq_sim_plot + theme(legend.position = c(1, 0),
-                     legend.justification = c(1, 0.1),
-                     legend.text = element_text(face = "italic"))
+## Plot results for BLASTP
+(seq_sim_plot_BLAST <- seq_sim_plot(data_sub_BLAST, 21))
+#(seq_sim_plot_OF <- seq_sim_plot(data_sub_OF, 21))
 
-
-
-bbs_boxplot <- ggplot(data = subset(data_sub,
-                    pident.x < 60),
+bbs_boxplot_BLAST <- ggplot(data = subset(data_sub_BLAST,
+                                    pident.x < 60),
        aes(x = locus,
            y = pident.x)) +
   xlab("Locus") +
-  ylab("Human vs Insect (top match) - Percentage ID [%]") +
+  ylab(expression(paste(italic("H. sapiens"), " vs Insect - Percentage ID [%]"))) +
   geom_boxplot() +
   theme_bw() +
   theme(axis.title = element_text(face = "bold",
                                   size = 12)) +
   stat_compare_means()
 
-combined_plot <- ggarrange(seq_sim_plot,
-          bbs_boxplot,
-          ncol = 2,
-          nrow = 1,
-          widths = c(2,
-                     1),
-          labels = c("A",
-                     "B"))
-
-## Save image:
-dir.create("results")
-
-ggsave(filename = "results/multipanel_scatterplot_by_gene_new.pdf",
-       plot = combined_plot,
-       height = 10,
-       width = 17)
-
-ggsave(filename = "results/multipanel_scatter_boxplot_by_gene.png",
-       plot = combined_plot,
-       height = 10,
-       width = 17)
-
+(combined_plot <- ggarrange(seq_sim_plot_BLAST,
+          bbs_boxplot_BLAST,
+          ncol = 1,
+          nrow = 2,
+          heights = c(2,1),
+          labels = c("A", "B")))
 
 ## b) plot by species:
 seq_sim_plot2 <- ggplot(data = data_sub,
@@ -450,14 +609,35 @@ seq_sim_plot2 <- ggplot(data = data_sub,
 seq_sim_plot2 <- seq_sim_plot2 +
   theme(strip.text = element_text(face = "italic"))
 
+```
+
+7. Save data 
+
+```{r, include = FALSE}
 ## Save image:
+if (!dir.exists("results")) {dir.create("results")} 
+
+ggsave(filename = "results/multipanel_scatterplot_by_gene.png",
+       plot = seq_sim_plot,
+       height = 8,
+       width = 12)
+
+ggsave(filename = "results/multipanel_scatterplot_by_gene_new.pdf",
+       plot = combined_plot,
+       height = 10,
+       width = 17)
+
+ggsave(filename = "results/multipanel_scatter_boxplot_by_gene.png",
+       plot = combined_plot,
+       height = 10,
+       width = 17)
+
 ggsave(filename = "results/multipanel_scatterplot_by_species.pdf",
        plot = seq_sim_plot2,
        height = 8,
        width = 12)
 
 ## Save data
-write.table(data_sub, file = "bbs_results_plot.txt", row.names = FALSE, col.names = TRUE, sep = "\t")
-
+write.table(data_sub, file = "data/bbs_results_plot.txt", row.names = FALSE, col.names = TRUE, sep = "\t")
 ```
 
