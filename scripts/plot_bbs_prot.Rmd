@@ -18,6 +18,8 @@ install.packages(c("tidyverse",
 
 ```{r, setup, include = FALSE}
 ## Load libraries and set global working directory
+library(ggplot2)
+library(ggtext)
 library(tidyverse)
 library(reshape2)
 library(ggpubr)
@@ -47,6 +49,22 @@ species_list <- species_list[order(species_list$V2), ]
 species_names <- read.table(file = "data/species_names.txt", 
                             header = FALSE,
                             sep = "\t")
+
+species_list_OF <- read.table(file = "data/OrthoFinder/OrthoFinder/with1000ofANTS/SpeciesIDs.txt",
+                              header = FALSE, 
+                              sep = " ")
+species_list_OF <- species_list_OF[order(species_list_OF$V1), ]
+species_list_OF$species <-  gsub(pattern = ".fa",
+                          replacement = "",
+                          species_list_OF$V2)
+species_list_OF$species <-  gsub(pattern = "-",
+                          replacement = ". ",
+                          species_list_OF$species)
+
+species_list_OF[[species]] <- sapply(species_list_OF[[species]], function(x) {
+      paste0(toupper(substr(x, 1, 1)), substr(x, 2, nchar(x)))
+  })
+
 
 replace_values <- function(X) {
     # Loop through each entry in the first column of X
@@ -99,6 +117,11 @@ subset_max_bitscore <- function(data_frame) {
     arrange(desc(bitscore)) %>%
     slice_head(n = 1) %>%
     ungroup()
+}
+
+## Add right species name to OF tables
+add_species_name <- funcion(data_frame) {
+  
 }
 
 ```
@@ -398,18 +421,18 @@ print("Done!")
 
 ```{r, include = FALSE}
 ## Read in species list:
-species_list_orthofinder <- read.table(file = "data/OrthoFinder/SpeciesIDs.txt",
+species_list_orthofinder <- read.table(file = "data/OrthoFinder/OrthoFinder/with1000ofANTS/SpeciesIDs.txt",
                            header = FALSE, sep = "\t")
 
 species_list_ordered <- species_list_orthofinder[order(species_list_orthofinder$V1), ]
 
 ## BBS1
-bbs1_data_human_OF <- read.table(file = "data/OrthoFinder/5_29768_match.txt",
+bbs1_data_human_OF <- read.table(file = "data/OrthoFinder/OrthoFinder/with1000ofANTS/10_12387.txt",
                    header = FALSE)
 bbs1_data_human_OF <- replace_col_names_OF(bbs1_data_human_OF, "human_ID", "insect_ID")
 bbs1_data_human_OF$species <- species_list_ordered$V2
 
-bbs1_data_insect_OF <- read.table(file = "data/OrthoFinder/5_29768_rep_match.txt",
+bbs1_data_insect_OF <- read.table(file = "data/OrthoFinder/OrthoFinder/with1000ofANTS/10_12387_rep.txt",
                    header = FALSE)
 bbs1_data_insect_OF <- replace_col_names_OF(bbs1_data_insect_OF, "insect_ID", "human_ID")
 bbs1_data_insect_OF$species <- species_list_ordered$V2
@@ -418,12 +441,12 @@ bbs1_data_OF <- left_join(bbs1_data_human_OF, bbs1_data_insect_OF, by=c("human_I
 bbs1_data_OF$locus <- "BBS1"
 
 ## BBS2
-bbs2_data_human_OF <- read.table(file = "data/OrthoFinder/5_30321_match.txt",
+bbs2_data_human_OF <- read.table(file = "data/OrthoFinder/OrthoFinder/with1000ofANTS/10_17593.txt",
                    header = FALSE)
 bbs2_data_human_OF <- replace_col_names_OF(bbs2_data_human_OF, "human_ID", "insect_ID")
 bbs2_data_human_OF$species <- species_list_ordered$V2[-8]
 
-bbs2_data_insect_OF <- read.table(file = "data/OrthoFinder/5_30321_rep_match.txt",
+bbs2_data_insect_OF <- read.table(file = "data/OrthoFinder/OrthoFinder/with1000ofANTS/10_17593_rep.txt",
                    header = FALSE)
 bbs2_data_insect_OF <- replace_col_names_OF(bbs2_data_insect_OF, "insect_ID", "human_ID")
 bbs2_data_insect_OF$species <- species_list_ordered$V2[-8]
@@ -432,12 +455,12 @@ bbs2_data_OF <- left_join(bbs2_data_human_OF, bbs2_data_insect_OF, by=c("human_I
 bbs2_data_OF$locus <- "BBS2"
 
 ## BBS4
-bbs4_data_human_OF <- read.table(file = "data/OrthoFinder/5_30864_match.txt",
+bbs4_data_human_OF <- read.table(file = "data/OrthoFinder/OrthoFinder/with1000ofANTS/10_15727.txt",
                    header = FALSE)
 bbs4_data_human_OF <- replace_col_names_OF(bbs4_data_human_OF, "human_ID", "insect_ID")
 bbs4_data_human_OF$species <- species_list_ordered$V2
 
-bbs4_data_insect_OF <- read.table(file = "data/OrthoFinder/5_30864_rep_match.txt",
+bbs4_data_insect_OF <- read.table(file = "data/OrthoFinder/OrthoFinder/with1000ofANTS/10_15727_rep.txt",
                    header = FALSE)
 bbs4_data_insect_OF <- replace_col_names_OF(bbs4_data_insect_OF, "insect_ID", "human_ID")
 bbs4_data_insect_OF$species <- species_list_ordered$V2
@@ -446,12 +469,12 @@ bbs4_data_OF <- left_join(bbs4_data_human_OF, bbs4_data_insect_OF, by=c("human_I
 bbs4_data_OF$locus <- "BBS4"
 
 ## BBS5
-bbs5_data_human_OF <- read.table(file = "data/OrthoFinder/5_32419_match.txt",
+bbs5_data_human_OF <- read.table(file = "data/OrthoFinder/OrthoFinder/with1000ofANTS/10_15529.txt",
                    header = FALSE)
 bbs5_data_human_OF <- replace_col_names_OF(bbs5_data_human_OF, "human_ID", "insect_ID")
 bbs5_data_human_OF$species <- species_list_ordered$V2
 
-bbs5_data_insect_OF <- read.table(file = "data/OrthoFinder/5_32419_rep_match.txt",
+bbs5_data_insect_OF <- read.table(file = "data/OrthoFinder/OrthoFinder/with1000ofANTS/10_15529_rep.txt",
                    header = FALSE)
 bbs5_data_insect_OF <- replace_col_names_OF(bbs5_data_insect_OF, "insect_ID", "human_ID")
 bbs5_data_insect_OF$species <- species_list_ordered$V2
@@ -459,19 +482,103 @@ bbs5_data_insect_OF$species <- species_list_ordered$V2
 bbs5_data_OF <- left_join(bbs5_data_human_OF, bbs5_data_insect_OF, by=c("human_ID", "species"))
 bbs5_data_OF$locus <- "BBS5"
 
+## BBS6
+bbs6_data_human_OF <- read.ftable(file ="data/OrthoFinder/OrthoFinder/with1000ofANTS/10_4999.txt",
+                                  header = FALSE)
+bbs6_data_human_OF <- replace_col_names_OF(bbs6_data_human_OF, "human_ID", "insect_ID")
+
+bbs6_data_insect_OF <- read.table(file = "data/OrthoFinder/OrthoFinder/with1000ofANTS/10_4999_rep.txt",
+                   header = FALSE)
+bbs6_data_insect_OF <- replace_col_names_OF(bbs6_data_insect_OF, "insect_ID", "human_ID")
+
+bbs6_data_OF <- left_join(bbs6_data_human_OF, bbs6_data_insect_OF, by=c("human_ID", "species"))
+bbs6_data_OF$locus <- "BBS6"
+
 ## BBS7
-bbs7_data_human_OF <- read.table(file = "data/OrthoFinder/5_33401_match.txt",
+bbs7_data_human_OF <- read.table(file = "data/OrthoFinder/OrthoFinder/with1000ofANTS/10_10312.txt",
                    header = FALSE)
 bbs7_data_human_OF <- replace_col_names_OF(bbs7_data_human_OF, "human_ID", "insect_ID")
 bbs7_data_human_OF$species <- species_list_ordered$V2[-8]
 
-bbs7_data_insect_OF <- read.table(file = "data/OrthoFinder/5_33401_rep_match.txt",
+bbs7_data_insect_OF <- read.table(file = "data/OrthoFinder/OrthoFinder/with1000ofANTS/10_10312_rep.txt",
                    header = FALSE)
 bbs7_data_insect_OF <- replace_col_names_OF(bbs7_data_insect_OF, "insect_ID", "human_ID")
 bbs7_data_insect_OF$species <- species_list_ordered$V2[-8]
 
 bbs7_data_OF <- left_join(bbs7_data_human_OF, bbs7_data_insect_OF, by=c("human_ID", "species"))
 bbs7_data_OF$locus <- "BBS7"
+
+## BBS8
+bbs8_data_human_OF <- read.ftable(file ="data/OrthoFinder/OrthoFinder/with1000ofANTS/10_6195.txt",
+                                  header = FALSE)
+bbs8_data_human_OF <- replace_col_names_OF(bbs8_data_human_OF, "human_ID", "insect_ID")
+
+bbs8_data_insect_OF <- read.table(file = "data/OrthoFinder/OrthoFinder/with1000ofANTS/10_6195_rep.txt",
+                   header = FALSE)
+bbs8_data_insect_OF <- replace_col_names_OF(bbs8_data_insect_OF, "insect_ID", "human_ID")
+
+bbs8_data_OF <- left_join(bbs8_data_human_OF, bbs8_data_insect_OF, by=c("human_ID", "species"))
+bbs8_data_OF$locus <- "BBS8"
+
+## BBS9
+bbs9_data_human_OF <- read.ftable(file ="data/OrthoFinder/OrthoFinder/with1000ofANTS/10_5677.txt",
+                                  header = FALSE)
+bbs9_data_human_OF <- replace_col_names_OF(bbs9_data_human_OF, "human_ID", "insect_ID")
+
+bbs9_data_insect_OF <- read.table(file = "data/OrthoFinder/OrthoFinder/with1000ofANTS/10_5677_rep.txt",
+                   header = FALSE)
+bbs9_data_insect_OF <- replace_col_names_OF(bbs9_data_insect_OF, "insect_ID", "human_ID")
+
+bbs9_data_OF <- left_join(bbs9_data_human_OF, bbs9_data_insect_OF, by=c("human_ID", "species"))
+bbs9_data_OF$locus <- "BBS9"
+
+## BBS10
+bbs10_data_human_OF <- read.ftable(file ="data/OrthoFinder/OrthoFinder/with1000ofANTS/10_12045.txt",
+                                  header = FALSE)
+bbs10_data_human_OF <- replace_col_names_OF(bbs10_data_human_OF, "human_ID", "insect_ID")
+
+bbs10_data_insect_OF <- read.table(file = "data/OrthoFinder/OrthoFinder/with1000ofANTS/10_12045_rep.txt",
+                   header = FALSE)
+bbs10_data_insect_OF <- replace_col_names_OF(bbs10_data_insect_OF, "insect_ID", "human_ID")
+
+bbs10_data_OF <- left_join(bbs10_data_human_OF, bbs10_data_insect_OF, by=c("human_ID", "species"))
+bbs10_data_OF$locus <- "BBS10"
+
+## BBS11
+bbs11_data_human_OF <- read.ftable(file ="data/OrthoFinder/OrthoFinder/with1000ofANTS/10_11753.txt",
+                                  header = FALSE)
+bbs11_data_human_OF <- replace_col_names_OF(bbs11_data_human_OF, "human_ID", "insect_ID")
+
+bbs11_data_insect_OF <- read.table(file = "data/OrthoFinder/OrthoFinder/with1000ofANTS/10_11753_rep.txt",
+                   header = FALSE)
+bbs11_data_insect_OF <- replace_col_names_OF(bbs11_data_insect_OF, "insect_ID", "human_ID")
+
+bbs11_data_OF <- left_join(bbs11_data_human_OF, bbs11_data_insect_OF, by=c("human_ID", "species"))
+bbs11_data_OF$locus <- "BBS11"
+
+## BBS12
+bbs12_data_human_OF <- read.ftable(file ="data/OrthoFinder/OrthoFinder/with1000ofANTS/10_12454.txt",
+                                  header = FALSE)
+bbs12_data_human_OF <- replace_col_names_OF(bbs12_data_human_OF, "human_ID", "insect_ID")
+
+bbs12_data_insect_OF <- read.table(file = "data/OrthoFinder/OrthoFinder/with1000ofANTS/10_12454_rep.txt",
+                   header = FALSE)
+bbs12_data_insect_OF <- replace_col_names_OF(bbs12_data_insect_OF, "insect_ID", "human_ID")
+
+bbs12_data_OF <- left_join(bbs12_data_human_OF, bbs12_data_insect_OF, by=c("human_ID", "species"))
+bbs12_data_OF$locus <- "BBS12"
+
+## BBS18
+bbs18_data_human_OF <- read.ftable(file ="data/OrthoFinder/OrthoFinder/with1000ofANTS/10_13408.txt",
+                                  header = FALSE)
+bbs18_data_human_OF <- replace_col_names_OF(bbs18_data_human_OF, "human_ID", "insect_ID")
+
+bbs18_data_insect_OF <- read.table(file = "data/OrthoFinder/OrthoFinder/with1000ofANTS/10_13408_rep.txt",
+                   header = FALSE)
+bbs18_data_insect_OF <- replace_col_names_OF(bbs18_data_insect_OF, "insect_ID", "human_ID")
+
+bbs18_data_OF <- left_join(bbs18_data_human_OF, bbs18_data_insect_OF, by=c("human_ID", "species"))
+bbs18_data_OF$locus <- "BBS18"
 
 
 
@@ -481,10 +588,13 @@ combined_data_OF <-  rbind(bbs1_data_OF,
                         bbs2_data_OF,
                         bbs4_data_OF,
                         bbs5_data_OF,
-                        bbs7_data_OF
-                        )
+                        bbs7_data_OF,
+                        bbs8_data_OF,
+                        bbs9_data_OF,
+                        bbs10_data_OF,
+                        bbs11_data_OF,
+                        bbs18_data_OF)
 
-#combined_data_OF$origin <- "OF"
 data_sub_OF <- combined_data_OF %>%
   select(human_ID,
          insect_ID.x,
@@ -522,7 +632,20 @@ data_sub_OF$species <- factor(data_sub_OF$species,
 
 ```
 
-6. Plot data:
+6. Combine BLASTP data with OF data for plotting
+
+```{r, include = FALSE}
+## Add new column with origin to both datasets
+combined_data_BLAST$origin <- "BLASTP"
+combined_data_OF$origin <- "OF"
+
+combined_data <- rbind(combined_data_BLAST,
+                       combined_data_OF)
+
+```
+
+
+7. Plot data
 
 ```{r, echo = FALSE}
 
@@ -538,14 +661,12 @@ seq_sim_plot <- function(data_sub, point_shape){
            y = pident.y)) +
   xlab(expression(paste(italic("H. sapiens"), " vs Insect - Percentage ID [%]"))) +
   ylab(expression(paste("Insect vs ", italic("H. sapiens"), " - Percentage ID [%]"))) +
-  geom_point(aes(fill = species, color = species),
-             stroke = 0.5,
+  geom_point(aes(color = species),
              alpha = 0.8,
              shape = point_shape,
              size = 5
              ) +
-  scale_color_manual(values = color_ID) +
-  scale_fill_manual(values = color_ID) +
+  scale_color_manual("Species", values = color_ID) +
   theme_bw() +
   theme(axis.title = element_text(face = "bold",
                                   size = 12),
@@ -553,36 +674,39 @@ seq_sim_plot <- function(data_sub, point_shape){
                                    size = 10),
         legend.position = c(1, 0),
                      legend.justification = c(1, 0.1),
-        legend.direction = "horizontal",
+        legend.direction = "horizontal"
         ) +
-  guides(colour = guide_legend(title.position = "top")) +
+  guides(color = guide_legend(title.position = "top")) +
   facet_wrap(~locus,
              nrow = 3,
              ncol = 4)
 }
 
 ## Plot results for BLASTP
-(seq_sim_plot_BLAST <- seq_sim_plot(data_sub_BLAST, 21))
-#(seq_sim_plot_OF <- seq_sim_plot(data_sub_OF, 21))
+(seq_sim_plot_BLAST <- seq_sim_plot(data_sub_BLAST, 19))
+#(seq_sim_plot_OF <- seq_sim_plot(data_sub_OF, 19))
 
-bbs_boxplot_BLAST <- ggplot(data = subset(data_sub_BLAST,
+(bbs_boxplot_BLAST <- ggplot(data = subset(data_sub_BLAST,
                                     pident.x < 60),
        aes(x = locus,
            y = pident.x)) +
+  labs(y = "*H. sapiens* vs Insect -<br>Percentage ID [%]") +
   xlab("Locus") +
-  ylab(expression(paste(italic("H. sapiens"), " vs Insect - Percentage ID [%]"))) +
   geom_boxplot() +
   theme_bw() +
-  theme(axis.title = element_text(face = "bold",
-                                  size = 12)) +
-  stat_compare_means()
+  theme(axis.title = element_text(size = 12)) +
+  theme(axis.title.y = ggtext::element_markdown()) +
+  stat_compare_means())
 
-(combined_plot <- ggarrange(seq_sim_plot_BLAST,
+## Create empty plot
+#empty_plot <- ggplot() + theme_void()
+
+(combined_plot <- ggarrange(seq_sim_plot_BLAST, empty_plot,
           bbs_boxplot_BLAST,
           ncol = 1,
-          nrow = 2,
-          heights = c(2,1),
-          labels = c("A", "B")))
+          nrow = 3,
+          heights = c(2,0.1,1),
+          labels = c("A","B", "")))
 
 ## b) plot by species:
 seq_sim_plot2 <- ggplot(data = data_sub,
@@ -624,8 +748,8 @@ ggsave(filename = "results/multipanel_scatterplot_by_gene.png",
 
 ggsave(filename = "results/multipanel_scatterplot_by_gene_new.pdf",
        plot = combined_plot,
-       height = 10,
-       width = 17)
+       height = 13,
+       width = 11)
 
 ggsave(filename = "results/multipanel_scatter_boxplot_by_gene.png",
        plot = combined_plot,
