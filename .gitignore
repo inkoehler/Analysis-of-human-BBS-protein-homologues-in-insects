@@ -1,3 +1,4 @@
 # Ignore folders with filtered blast results
 data/human_vs_insect/*
 data/insect_vs_human/*
+data/OrthoFinder/*
