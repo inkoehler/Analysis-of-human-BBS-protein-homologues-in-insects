@@ -312,7 +312,7 @@ bbs10_data_human <- replace_values(bbs10_data_human)
 names(bbs10_data_human)[names(bbs10_data_human) == "V2"] <- "human_ID"
 names(bbs10_data_human)[names(bbs10_data_human) == "V3"] <- "insect_ID"
 bbs10_data_human <- subset_max_bitscore(bbs10_data_human)
-
+#
 bbs10_data_insect <- read.table(file = "data/insect_vs_human/unranked/NP_078961.3_unranked.txt",
                                header = FALSE)
 bbs10_data_insect <- replace_values(bbs10_data_insect)
