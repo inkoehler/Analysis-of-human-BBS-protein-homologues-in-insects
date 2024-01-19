@@ -26,7 +26,7 @@ library(ggpubr)
 library(stringr)
 library(plyr)
 
-knitr::opts_knit$set(root.dir = '/home/ina/bbs_project')
+knitr::opts_knit$set(root.dir = '/home/inak/bbs_project')
 ```
 
 2.1 Load already prepared data and skip step 2.2 and 3:
@@ -49,24 +49,10 @@ species_list <- species_list[order(species_list$V2), ]
 species_names <- read.table(file = "data/species_names.txt", 
                             header = FALSE,
                             sep = "\t")
+species_names$V4 <- c("2_", "3_", "4_", "6_", "8_", "?", "12_", "13_", "14_", "16_", "17_", "18_")
 
-species_list_OF <- read.table(file = "data/OrthoFinder/OrthoFinder/with1000ofANTS/SpeciesIDs.txt",
-                              header = FALSE, 
-                              sep = " ")
-species_list_OF <- species_list_OF[order(species_list_OF$V1), ]
-species_list_OF$species <-  gsub(pattern = ".fa",
-                          replacement = "",
-                          species_list_OF$V2)
-species_list_OF$species <-  gsub(pattern = "-",
-                          replacement = ". ",
-                          species_list_OF$species)
-
-species_list_OF[[species]] <- sapply(species_list_OF[[species]], function(x) {
-      paste0(toupper(substr(x, 1, 1)), substr(x, 2, nchar(x)))
-  })
-
-
-replace_values <- function(X) {
+prepare_df_BLASTP <- function(X) {
+  # Add species column
     # Loop through each entry in the first column of X
     for (i in 1:nrow(X)) {
         # Find the row in Y where the first column matches
@@ -94,7 +80,8 @@ replace_values <- function(X) {
     return(X)
 }
 
-replace_col_names_OF <- function(dataset, V1, V2) {
+prepare_df_OF <- function(dataset, V1, V2) {
+    # Replace column names
     names(dataset)[names(dataset) == "V1"] <- V1
     names(dataset)[names(dataset) == "V2"] <- V2
     names(dataset)[names(dataset) == "V3"] <- "pident"
@@ -107,6 +94,21 @@ replace_col_names_OF <- function(dataset, V1, V2) {
     names(dataset)[names(dataset) == "V10"] <- "send"
     names(dataset)[names(dataset) == "V11"] <- "evalue"
     names(dataset)[names(dataset) == "V12"] <- "bitscore"
+    # Add species column
+    for (i in 1:nrow(dataset)) {
+      # Find the row in species_names where the first column matches
+      matching_row <- which(species_names$V4 == sub("(_).*", "\\1", dataset[i, 1]) | 
+                              species_names$V4 == sub("(_).*", "\\1", dataset[i, 2]))
+      
+      # Check if a match is found
+      if (length(matching_row) == 1) {
+        # Replace the entry in the dataframe with the value from the second column
+        # of species_names
+        dataset$species[i] <- species_names$V3[matching_row]
+      } else {
+        dataset$species <- NA
+      }
+    }
     return(dataset)
 }
 
@@ -119,10 +121,6 @@ subset_max_bitscore <- function(data_frame) {
     ungroup()
 }
 
-## Add right species name to OF tables
-add_species_name <- funcion(data_frame) {
-  
-}
 
 ```
 
@@ -421,10 +419,27 @@ print("Done!")
 
 ```{r, include = FALSE}
 ## Read in species list:
-species_list_orthofinder <- read.table(file = "data/OrthoFinder/OrthoFinder/with1000ofANTS/SpeciesIDs.txt",
-                           header = FALSE, sep = "\t")
+species_list_OF <- read.table(file = "data/OrthoFinder/OrthoFinder/with1000ofANTS/SpeciesIDs.txt",
+                              header = FALSE, 
+                              sep = " ")
+species_list_OF <- species_list_OF[order(species_list_OF$V1), ]
+species_list_OF$species <-  gsub(pattern = ".fa",
+                          replacement = "",
+                          species_list_OF$V2)
+species_list_OF$species <-  gsub(pattern = "_",
+                          replacement = ". ",
+                          species_list_OF$species)
+species_list_OF$V1 <-  gsub(pattern = ":",
+                          replacement = "",
+                          species_list_OF$V1)
 
-species_list_ordered <- species_list_orthofinder[order(species_list_orthofinder$V1), ]
+species_list_OF$species <- sapply(species_list_OF$species, function(x) {
+  if (nchar(x) > 0) {
+    paste0(toupper(substr(x, 1, 1)), substr(x, 2, nchar(x)))
+  } else {
+    x
+  }
+})
 
 ## BBS1
 bbs1_data_human_OF <- read.table(file = "data/OrthoFinder/OrthoFinder/with1000ofANTS/10_12387.txt",
