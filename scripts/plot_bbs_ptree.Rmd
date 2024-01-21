@@ -1,0 +1,28 @@
+---
+title: "Phylogenetic Tree BBS Project"
+author: "Ina Koehler"
+date: "2024-01-21"
+output: html_document
+---
+
+```{r, include = FALSE, message = FALSE}
+## Install packages if not already installed
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("ggtree")
+
+
+```
+
+1. Load libraries and set working directory:
+
+```{r, setup, include = FALSE}
+## Load libraries and set global working directory
+library(ggplot2)
+library(ggtext)
+
+knitr::opts_knit$set(root.dir = '/home/inak/bbs_project')
+```
+
+

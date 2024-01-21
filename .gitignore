@@ -4,4 +4,5 @@ data/insect_vs_human/*
 data/OrthoFinder/*
 data/OrthoFinder_results/*
 results/results_OrthoFinder/*
+doc/notebook.md
 
