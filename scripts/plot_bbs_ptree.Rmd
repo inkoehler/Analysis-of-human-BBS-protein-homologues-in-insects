@@ -20,7 +20,7 @@ BiocManager::install("ggtree")
 ```{r, setup, include = FALSE}
 ## Load libraries and set global working directory
 library(ggplot2)
-library(ggtext)
+library(ggtree)
 
 knitr::opts_knit$set(root.dir = '/home/inak/bbs_project')
 ```

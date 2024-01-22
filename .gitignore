@@ -5,4 +5,8 @@ data/OrthoFinder/*
 data/OrthoFinder_results/*
 results/results_OrthoFinder/*
 doc/notebook.md
+data/old/*
+scripts/plot_bbs_prot.RData
+data/alignment/*
+data/fasta/*
 
