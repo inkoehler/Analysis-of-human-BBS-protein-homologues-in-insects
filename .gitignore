@@ -9,4 +9,5 @@ data/old/*
 scripts/plot_bbs_prot.RData
 data/alignment/*
 data/fasta/*
+doc/Supplementary_Information_minorrevisions.docx
 

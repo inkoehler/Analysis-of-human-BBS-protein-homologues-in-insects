@@ -343,7 +343,6 @@ combined_data_BLAST <-  rbind(bbs1_data,
                               bbs12_data,
                               bbs18_data)
 
-#combined_data_BLAST$origin <- "BLASTP"
 ## A subset of the data is created with only the columns needed for the plots
 data_sub_BLAST <- combined_data_BLAST %>%
   select(human_ID,
@@ -357,7 +356,7 @@ data_sub_BLAST <- combined_data_BLAST %>%
          species)
 
 
-#data_sub_BLAST$species <-  str_to_title(data_sub_BLAST$species)
+data_sub_BLAST$species <-  str_to_title(data_sub_BLAST$species)
 data_sub_BLAST$pident.x <- as.numeric(data_sub_BLAST$pident.x)
 data_sub_BLAST$pident.y <- as.numeric(data_sub_BLAST$pident.y)
 data_sub_BLAST$pident.x[is.na(data_sub_BLAST$pident.x)] <- 0
@@ -366,6 +365,12 @@ data_sub_BLAST$pident.y[is.na(data_sub_BLAST$pident.y)] <- 0
 ## Update levels for plots:
 data_sub_BLAST$species <- factor(data_sub_BLAST$species,
                          levels = unique(data_sub_BLAST$species))
+
+data_sub_BLAST <- data_sub_BLAST %>%
+  mutate(
+    number = as.numeric(str_extract(locus, "\\d+")),
+    locus = factor(locus, levels = unique(locus[order(number)]))
+  )
 
 data_sub_BLAST$origin <- "BLASTP"
 
@@ -553,7 +558,6 @@ combined_data_OF <-  rbind(bbs1_data_OF,
                         bbs10_data_OF,
                         bbs11_data_OF)
                         #bbs18_data_OF)
-combined_data_OF$origin <- "OrthoFinder"
 
 data_sub_OF <- combined_data_OF %>%
   select(human_ID,
@@ -568,24 +572,31 @@ data_sub_OF <- combined_data_OF %>%
          origin)
 
 
-#data_sub_OF$species <-  str_to_title(data_sub_OF$species)
+data_sub_OF$species <-  str_to_title(data_sub_OF$species)
 data_sub_OF$pident.x <- as.numeric(data_sub_OF$pident.x)
 data_sub_OF$pident.y <- as.numeric(data_sub_OF$pident.y)
 data_sub_OF$pident.x[is.na(data_sub_OF$pident.x)] <- 0
 data_sub_OF$pident.y[is.na(data_sub_OF$pident.y)] <- 0
 
-# Separate the numeric and non-numeric parts
+
+## Update levels for plots:
+data_sub_OF$species <- factor(data_sub_OF$species,
+                         levels = unique(data_sub_OF$species))
+
 data_sub_OF <- data_sub_OF %>%
   mutate(
     number = as.numeric(str_extract(locus, "\\d+")),
     locus = factor(locus, levels = unique(locus[order(number)]))
   )
 
-## Update levels for plots:
-data_sub_OF$species <- factor(data_sub_OF$species,
-                         levels = unique(data_sub_OF$species))
+combined_data_OF$origin <- "OrthoFinder"
 
-write.table(data_sub_OF, file = "data/bbs_results_OF.txt", row.names = FALSE, col.names = TRUE, sep = "\t")
+#write.table(data_sub_OF, 
+#            file = "data/bbs_results_OF.txt", 
+#            row.names = FALSE, 
+#            col.names = TRUE, 
+#            sep = "\t",
+#            quote = FALSE)
 
 ```
 
@@ -595,6 +606,7 @@ write.table(data_sub_OF, file = "data/bbs_results_OF.txt", row.names = FALSE, co
 
 combined_data <- rbind(data_sub_BLAST,
                        data_sub_OF)
+
 combined_data <- combined_data %>%
   mutate(
     number = as.numeric(str_extract(locus, "\\d+")),
