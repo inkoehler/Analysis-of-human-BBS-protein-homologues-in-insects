@@ -369,7 +369,12 @@ data_sub_BLAST$species <- factor(data_sub_BLAST$species,
 
 data_sub_BLAST$origin <- "BLASTP"
 
-write.table(data_sub_BLAST, file = "data/bbs_results_BLAST.txt", row.names = FALSE, col.names = TRUE, sep = "\t")
+write.table(data_sub_BLAST, 
+            file = "data/bbs_results_BLAST.txt", 
+            row.names = FALSE, 
+            col.names = TRUE, 
+            sep = "\t",
+            quote = FALSE)
 ```
 
 4. Load percentage identity data from OrthoFinder search:
