@@ -42,11 +42,6 @@ The table created in this script and used for the plots can be saved at the end.
 
 ```{r, message = FALSE}
 ## Read in species list:
-species_list <- read.table(file = "data/bbs_list2.txt",
-                           header = FALSE)
-species_list[species_list == "x"] <- NA
-species_list <- species_list[order(species_list$V2), ]
-
 species_names <- read.table(file = "data/species_names.txt", 
                             header = FALSE,
                             sep = "\t")
@@ -421,7 +416,6 @@ bbs1_data_OF$locus <- "BBS1"
 
 ## BBS2
 bbs2_filepaths_human_OF <- c("data/human_vs_insect/OF/5_18205.txt",
-                   "data/human_vs_insect/OF/5_41655.txt",
                    "data/human_vs_insect/OF/5_30321.txt")
 bbs2_data_human_OF <- ldply(bbs2_filepaths_human_OF, read.table, header = FALSE)
 bbs2_data_human_OF <- prepare_df_OF(bbs2_data_human_OF, "human_ID", "insect_ID")
@@ -429,7 +423,6 @@ bbs2_data_human_OF <- subset_max_bitscore(bbs2_data_human_OF)
 
 
 bbs2_filepaths_insect_OF <- c("data/human_vs_insect/OF/5_18205_rev.txt",
-                   "data/human_vs_insect/OF/5_41655_rev.txt",
                    "data/human_vs_insect/OF/5_30321_rev.txt")
 bbs2_data_insect_OF <- ldply(bbs2_filepaths_insect_OF, read.table, header = FALSE)
 bbs2_data_insect_OF <- prepare_df_OF(bbs2_data_insect_OF, "insect_ID", "human_ID")
@@ -466,23 +459,68 @@ bbs5_data_insect_OF <- subset_max_bitscore(bbs5_data_insect_OF)
 bbs5_data_OF <- left_join(bbs5_data_human_OF, bbs5_data_insect_OF, by=c("human_ID", "species"))
 bbs5_data_OF$locus <- "BBS5"
 
+##BBS6
+bbs6_filepaths_human_OF <- c("data/human_vs_insect/OF/5_28261.txt",
+                    "data/human_vs_insect/OF/5_32926.txt")
+bbs6_data_human_OF <- ldply(bbs6_filepaths_human_OF, read.table, header = FALSE)
+bbs6_data_human_OF <- prepare_df_OF(bbs6_data_human_OF, "human_ID", "insect_ID")
+bbs6_data_human_OF <- subset_max_bitscore(bbs6_data_human_OF)
+
+bbs6_filepaths_insect_OF <- c("data/human_vs_insect/OF/5_28261_rev.txt",
+                    "data/human_vs_insect/OF/5_32926_rev.txt")
+bbs6_data_insect_OF <- ldply(bbs6_filepaths_insect_OF, read.table, header = FALSE)
+bbs6_data_insect_OF <- prepare_df_OF(bbs6_data_insect_OF, "insect_ID", "human_ID")
+bbs6_data_insect_OF <- subset_max_bitscore(bbs6_data_insect_OF)
+
+bbs6_data_OF <- left_join(bbs6_data_human_OF, bbs6_data_insect_OF, by=c("human_ID", "species"))
+bbs6_data_OF$locus <- "BBS6"
+
+
 ## BBS7
 bbs7_filepaths_human_OF <- c("data/human_vs_insect/OF/5_27985.txt",
-                    "data/human_vs_insect/OF/5_33401.txt",
-                    "data/human_vs_insect/OF/5_37896.txt")
+                    "data/human_vs_insect/OF/5_33401.txt")
 bbs7_data_human_OF <- ldply(bbs7_filepaths_human_OF, read.table, header = FALSE)
 bbs7_data_human_OF <- prepare_df_OF(bbs7_data_human_OF, "human_ID", "insect_ID")
 bbs7_data_human_OF <- subset_max_bitscore(bbs7_data_human_OF)
 
 bbs7_filepaths_insect_OF <- c("data/human_vs_insect/OF/5_27985_rev.txt",
-                    "data/human_vs_insect/OF/5_33401_rev.txt",
-                    "data/human_vs_insect/OF/5_37896_rev.txt")
+                    "data/human_vs_insect/OF/5_33401_rev.txt")
 bbs7_data_insect_OF <- ldply(bbs7_filepaths_insect_OF, read.table, header = FALSE)
 bbs7_data_insect_OF <- prepare_df_OF(bbs7_data_insect_OF, "insect_ID", "human_ID")
 bbs7_data_insect_OF <- subset_max_bitscore(bbs7_data_insect_OF)
 
 bbs7_data_OF <- left_join(bbs7_data_human_OF, bbs7_data_insect_OF, by=c("human_ID", "species"))
 bbs7_data_OF$locus <- "BBS7"
+
+
+## BBS8
+bbs8_data_human_OF <- read.table(file ="data/human_vs_insect/OF/5_9618.txt",
+                                  header = FALSE)
+bbs8_data_human_OF <- prepare_df_OF(bbs8_data_human_OF, "human_ID", "insect_ID")
+bbs8_data_human_OF <- subset_max_bitscore(bbs8_data_human_OF)
+
+bbs8_data_insect_OF <- read.table(file = "data/human_vs_insect/OF/5_9618_rev.txt",
+                   header = FALSE)
+bbs8_data_insect_OF <- prepare_df_OF(bbs8_data_insect_OF, "insect_ID", "human_ID")
+bbs8_data_insect_OF <- subset_max_bitscore(bbs8_data_insect_OF)
+
+bbs8_data_OF <- left_join(bbs8_data_human_OF, bbs8_data_insect_OF, by=c("human_ID", "species"))
+bbs8_data_OF$locus <- "BBS8"
+
+
+## BBS9
+bbs9_data_human_OF <- read.table(file ="data/human_vs_insect/OF/5_13527.txt",
+                                  header = FALSE)
+bbs9_data_human_OF <- prepare_df_OF(bbs9_data_human_OF, "human_ID", "insect_ID")
+bbs9_data_human_OF <- subset_max_bitscore(bbs9_data_human_OF)
+
+bbs9_data_insect_OF <- read.table(file = "data/human_vs_insect/OF/5_13527_rev.txt",
+                   header = FALSE)
+bbs9_data_insect_OF <- prepare_df_OF(bbs9_data_insect_OF, "insect_ID", "human_ID")
+bbs9_data_insect_OF <- subset_max_bitscore(bbs9_data_insect_OF)
+
+bbs9_data_OF <- left_join(bbs9_data_human_OF, bbs9_data_insect_OF, by=c("human_ID", "species"))
+bbs9_data_OF$locus <- "BBS9"
 
 
 ## BBS10
@@ -501,16 +539,14 @@ bbs10_data_OF$locus <- "BBS10"
 
 
 ## BBS12
-bbs12_filepaths_human_OF <- c("data/human_vs_insect/OF/5_37860.txt",
-                    "data/human_vs_insect/OF/5_32545.txt",
-                    "data/human_vs_insect/OF/5_6201.txt")
+bbs12_filepaths_human_OF <- c("data/human_vs_insect/OF/5_32545.txt",
+                        "data/human_vs_insect/OF/5_6201.txt")
 bbs12_data_human_OF <- ldply(bbs12_filepaths_human_OF, read.table, header = FALSE)
 bbs12_data_human_OF <- prepare_df_OF(bbs12_data_human_OF, "human_ID", "insect_ID")
 bbs12_data_human_OF <- subset_max_bitscore(bbs12_data_human_OF)
 
-bbs12_filepaths_insect_OF <- c("data/human_vs_insect/OF/5_37860_rev.txt",
-                    "data/human_vs_insect/OF/5_32545_rev.txt",
-                    "data/human_vs_insect/OF/5_6201_rev.txt")
+bbs12_filepaths_insect_OF <- c("data/human_vs_insect/OF/5_32545_rev.txt",
+                       "data/human_vs_insect/OF/5_6201_rev.txt")
 bbs12_data_insect_OF <- ldply(bbs12_filepaths_insect_OF, read.table, header = FALSE)
 bbs12_data_insect_OF <- prepare_df_OF(bbs12_data_insect_OF, "insect_ID", "human_ID")
 bbs12_data_insect_OF <- subset_max_bitscore(bbs12_data_insect_OF)
@@ -519,14 +555,33 @@ bbs12_data_OF <- left_join(bbs12_data_human_OF, bbs12_data_insect_OF, by=c("huma
 bbs12_data_OF$locus <- "BBS12"
 
 
+## BBS18
+bbs18_data_human_OF <- read.table(file ="data/human_vs_insect/OF/5_6521.txt",
+                                  header = FALSE)
+bbs18_data_human_OF <- prepare_df_OF(bbs18_data_human_OF, "human_ID", "insect_ID")
+bbs18_data_human_OF <- subset_max_bitscore(bbs18_data_human_OF)
+
+bbs18_data_insect_OF <- read.table(file = "data/human_vs_insect/OF/5_6521_rev.txt",
+                   header = FALSE)
+bbs18_data_insect_OF <- prepare_df_OF(bbs18_data_insect_OF, "insect_ID", "human_ID")
+bbs18_data_insect_OF <- subset_max_bitscore(bbs18_data_insect_OF)
+
+bbs18_data_OF <- left_join(bbs18_data_human_OF, bbs18_data_insect_OF, by=c("human_ID", "species"))
+bbs18_data_OF$locus <- "BBS18"
+
+
 # Combine:
 combined_data_OF <-  rbind(bbs1_data_OF,
                         bbs2_data_OF,
                         bbs4_data_OF,
                         bbs5_data_OF,
+                        bbs6_data_OF,
                         bbs7_data_OF,
+                        bbs8_data_OF,
+                        bbs9_data_OF,
                         bbs10_data_OF,
-                        bbs12_data_OF)
+                        bbs12_data_OF,
+                        bbs18_data_OF)
 
 data_sub_OF <- combined_data_OF %>%
   select(human_ID,
@@ -682,11 +737,13 @@ empty_plot <- ggplot() + theme_void()
                                   size = 12),
         legend.text = element_text(face = "italic",
                                    size = 10),
-        legend.position = c(1, 0),
-                     legend.justification = c(1, 0.1),
+        legend.position = "bottom",
         legend.direction = "horizontal"
         ) +
-  guides(color = guide_legend(title.position = "top")) +
+  guides(color = guide_legend(title.position = "top",
+                              nrow = 2,
+                              mcol = 9,
+                              byrow = TRUE)) +
   facet_wrap(~locus,
              nrow = 3,
              ncol = 4))
