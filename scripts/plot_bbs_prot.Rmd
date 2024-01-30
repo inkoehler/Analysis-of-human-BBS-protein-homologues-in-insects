@@ -34,8 +34,14 @@ knitr::opts_knit$set(root.dir = '/home/inak/bbs_project')
 The table created in this script and used for the plots can be saved at the end. If only changes with the plots are made, the table can be loaded here and the next steps can be skipped
 
 ```{r, include = FALSE}
-#data_sub_BLAST <- read.table(file = "data/bbs_results_BLAST.txt", header = TRUE)
-#data_sub_OF <- read.table(file = "data/bbs_results_OF.txt", header = TRUE)
+data_sub_BLAST <- read.table(file = "data/bbs_results_BLAST.txt", 
+                             header = TRUE,
+                             row.names = NULL,
+                             sep = "\t")
+data_sub_OF <- read.table(file = "data/bbs_results_OF.txt", 
+                          header = TRUE,
+                          row.names = NULL,
+                          sep = "\t")
 ```
 
 2.2 Load data and prepare functions:
@@ -128,7 +134,7 @@ subset_max_bitscore <- function(data_frame) {
 
 3. Load percentage identity data from blastp search:
 
-Does the same for every gene: Loads the blastp results for the human against insect blast and calls the function replace_values on the data. After that, the correct column names are set. The same is done for the blast results for insect against human. The two datasets are combined into one and an additional column with the gene name is added.
+Does the same for every gene: Loads the blastp results for the human against insect blast and calls the function replace_values on the data. After that, the correct column names are set. The same is done for the blast results for insect against human. The two datasets are combined into one and an additional column with the BBS gene name is added.
 
 ```{r , include = FALSE}
 
@@ -718,32 +724,33 @@ empty_plot <- ggplot() + theme_void()
 
 ## Plot combined BLASTP and OF data 
 (seq_sim_plot_combined <- ggplot() +
-    # Blast data
+  # Blast data
   geom_point(data = subset(combined_data, origin == 'BLASTP'),
-             aes(x = pident.x, y = pident.y, color = species),
+             aes(x = pident.x, y = pident.y, color = species, shape = "BLASTP"),
              alpha = 0.3,
-             shape = 19,
              size = 4) +
   # OF points
   geom_point(data = subset(combined_data, origin == 'OrthoFinder'),
-             aes(x = pident.x, y = pident.y, color = species), 
-             shape = 4,
+             aes(x = pident.x, y = pident.y, color = species, shape = "OrthoFinder"), 
              size = 4) +
   xlab(expression(paste(italic("H. sapiens"), " vs Species - Percentage ID [%]"))) +
   ylab(expression(paste("Species vs ", italic("H. sapiens"), " - Percentage ID [%]"))) +
   scale_color_manual("Species", values = color_ID) +
+  scale_shape_manual("Method", values = c(BLASTP = 19, OrthoFinder = 4)) +
   theme_bw() +
   theme(axis.title = element_text(face = "bold",
                                   size = 12),
         legend.text = element_text(face = "italic",
                                    size = 10),
         legend.position = "bottom",
-        legend.direction = "horizontal"
+        legend.direction = "horizontal",
+        legend.title = element_text(hjust = 0.5)
         ) +
   guides(color = guide_legend(title.position = "top",
                               nrow = 2,
                               mcol = 9,
-                              byrow = TRUE)) +
+                              byrow = TRUE),  # For the color legend
+         shape = guide_legend(title.position = "top")) +
   facet_wrap(~locus,
              nrow = 3,
              ncol = 4))
@@ -756,11 +763,6 @@ empty_plot <- ggplot() + theme_void()
 ```{r, include = FALSE}
 ## Save image:
 if (!dir.exists("results")) {dir.create("results")} 
-
-ggsave(filename = "results/multipanel_scatterplot_by_gene.png",
-       plot = seq_sim_plot,
-       height = 8,
-       width = 12)
 
 ggsave(filename = "results/multipanel_scatterplot_by_gene_new.pdf",
        plot = combined_plot,

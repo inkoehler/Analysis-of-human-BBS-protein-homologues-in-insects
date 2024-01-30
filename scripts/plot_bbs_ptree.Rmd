@@ -11,7 +11,7 @@ if (!require("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 
 BiocManager::install("ggtree")
-
+install.packages("ape")
 
 ```
 
@@ -21,8 +21,71 @@ BiocManager::install("ggtree")
 ## Load libraries and set global working directory
 library(ggplot2)
 library(ggtree)
+library(ape)
 
-knitr::opts_knit$set(root.dir = '/home/inak/bbs_project')
+knitr::opts_knit$set(root.dir = '/home/inak/bbs_project/data/phylogenetic_tree/')
 ```
 
+2. Load input data
+
+```{r, include = FALSE}
+# Assuming your Newick tree is stored in a file named "tree.newick"
+bbs1_data <- read.tree("BBS1_tree.txt")
+bbs2_data <- read.tree("BBS2_tree.txt")
+bbs4_data <- read.tree("BBS4_tree.txt")
+bbs5_data <- read.tree("BBS5_tree.txt")
+bbs7_data <- read.tree("BBS7_tree.txt")
+bbs8_data <- read.tree("BBS8_tree.txt")
+bbs9_data <- read.tree("BBS9_tree.txt")
+bbs12_data <- read.tree("BBS12_tree.txt")
+
+# Create the plot
+bbs1_tree <- ggtree(bbs1_data) + 
+    geom_tiplab() +  # Add labels to the tips
+    theme_tree2() +
+   ggtitle("BBS1")   # Use a theme suitable for trees
+
+bbs2_tree <- ggtree(bbs2_data) + 
+    geom_tiplab() +  # Add labels to the tips
+    theme_tree2() +
+   ggtitle("BBS2")   # Use a theme suitable for trees
+
+bbs4_tree <- ggtree(bbs4_data) + 
+    geom_tiplab() +  # Add labels to the tips
+    theme_tree2() +
+   ggtitle("BBS4")   # Use a theme suitable for trees
+
+bbs5_tree <- ggtree(bbs5_data) + 
+    geom_tiplab() +  # Add labels to the tips
+    theme_tree2() +
+   ggtitle("BBS5")   # Use a theme suitable for trees
+
+bbs7_tree <- ggtree(bbs7_data) + 
+    geom_tiplab() +  # Add labels to the tips
+    theme_tree2() +
+   ggtitle("BBS7")   # Use a theme suitable for trees
+
+bbs8_tree <- ggtree(bbs8_data) + 
+    geom_tiplab() +  # Add labels to the tips
+    theme_tree2() +
+   ggtitle("BBS8")   # Use a theme suitable for trees
+
+bbs9_tree <- ggtree(bbs9_data) + 
+    geom_tiplab() +  # Add labels to the tips
+    theme_tree2() +
+   ggtitle("BBS9")   # Use a theme suitable for trees
+
+bbs12_tree <- ggtree(bbs12_data) + 
+    geom_tiplab() +  # Add labels to the tips
+    theme_tree2() +
+   ggtitle("BBS12")   # Use a theme suitable for trees
+
+(combined_plot <- ggarrange(bbs1_tree, bbs2_tree, bbs4_tree,
+                            bbs5_tree, bbs7_tree, bbs8_tree,
+                            bbs9_tree, bbs12_tree,
+                            ncol = 2,
+                            nrow = 4))
+
+
+```
 
