@@ -30,6 +30,7 @@ knitr::opts_knit$set(root.dir = '/home/inak/bbs_project/data/phylogenetic_tree/'
 
 ```{r, include = FALSE}
 # Assuming your Newick tree is stored in a file named "tree.newick"
+species_data <- read.tree("SpeciesTree_rooted_node_labels.txt")
 bbs1_data <- read.tree("BBS1_tree.txt")
 bbs2_data <- read.tree("BBS2_tree.txt")
 bbs4_data <- read.tree("BBS4_tree.txt")
@@ -39,53 +40,65 @@ bbs8_data <- read.tree("BBS8_tree.txt")
 bbs9_data <- read.tree("BBS9_tree.txt")
 bbs12_data <- read.tree("BBS12_tree.txt")
 
+tree_plot <- function(data, title) {
+  ggtree(data, layout="slanted") +
+  geom_tiplab() +
+  theme_tree2() +
+  xlim(0,2.5) +
+  ggtitle(title)
+}
+
+```
+
+```{r, include = FALSE}
 # Create the plot
-bbs1_tree <- ggtree(bbs1_data) + 
-    geom_tiplab() +  # Add labels to the tips
-    theme_tree2() +
-   ggtitle("BBS1")   # Use a theme suitable for trees
+species_tree <- tree_plot(species_data, "Species tree")
 
-bbs2_tree <- ggtree(bbs2_data) + 
-    geom_tiplab() +  # Add labels to the tips
-    theme_tree2() +
-   ggtitle("BBS2")   # Use a theme suitable for trees
+bbs1_tree <- tree_plot(bbs1_data, "BBS1")
+bbs2_tree <- tree_plot(bbs2_data, "BBS2") 
+bbs4_tree <- tree_plot(bbs4_data, "BBS4")
+bbs5_tree <- tree_plot(bbs5_data, "BBS5")
+bbs7_tree <- tree_plot(bbs7_data, "BBS7")
+bbs8_tree <- tree_plot(bbs8_data, "BBS8")
+bbs8_tree <- flip(bbs8_tree, 17, 21)
+bbs9_tree <- tree_plot(bbs9_data, "BBS9")
 
-bbs4_tree <- ggtree(bbs4_data) + 
-    geom_tiplab() +  # Add labels to the tips
-    theme_tree2() +
-   ggtitle("BBS4")   # Use a theme suitable for trees
+```
 
-bbs5_tree <- ggtree(bbs5_data) + 
-    geom_tiplab() +  # Add labels to the tips
-    theme_tree2() +
-   ggtitle("BBS5")   # Use a theme suitable for trees
 
-bbs7_tree <- ggtree(bbs7_data) + 
-    geom_tiplab() +  # Add labels to the tips
-    theme_tree2() +
-   ggtitle("BBS7")   # Use a theme suitable for trees
-
-bbs8_tree <- ggtree(bbs8_data) + 
-    geom_tiplab() +  # Add labels to the tips
-    theme_tree2() +
-   ggtitle("BBS8")   # Use a theme suitable for trees
-
-bbs9_tree <- ggtree(bbs9_data) + 
-    geom_tiplab() +  # Add labels to the tips
-    theme_tree2() +
-   ggtitle("BBS9")   # Use a theme suitable for trees
-
-bbs12_tree <- ggtree(bbs12_data) + 
-    geom_tiplab() +  # Add labels to the tips
-    theme_tree2() +
-   ggtitle("BBS12")   # Use a theme suitable for trees
-
-(combined_plot <- ggarrange(bbs1_tree, bbs2_tree, bbs4_tree,
-                            bbs5_tree, bbs7_tree, bbs8_tree,
-                            bbs9_tree, bbs12_tree,
-                            ncol = 2,
-                            nrow = 4))
-
+```{r}
+ggsave(filename = "/home/inak/bbs_project/results/phylogenetic_tree/species_tree.pdf",
+       plot = species_tree,
+       height = 3,
+       width = 9)
+ggsave(filename = "/home/inak/bbs_project/results/phylogenetic_tree/bbs1_tree.pdf",
+       plot = bbs1_tree,
+       height = 3,
+       width = 9)
+ggsave(filename = "/home/inak/bbs_project/results/phylogenetic_tree/bbs2_tree.pdf",
+       plot = bbs2_tree,
+       height = 3,
+       width = 9)
+ggsave(filename = "/home/inak/bbs_project/results/phylogenetic_tree/bbs4_tree.pdf",
+       plot = bbs4_tree,
+       height = 3,
+       width = 9)
+ggsave(filename = "/home/inak/bbs_project/results/phylogenetic_tree/bbs5_tree.pdf",
+       plot = bbs5_tree,
+       height = 3,
+       width = 9)
+ggsave(filename = "/home/inak/bbs_project/results/phylogenetic_tree/bbs7_tree.pdf",
+       plot = bbs7_tree,
+       height = 3,
+       width = 9)
+ggsave(filename = "/home/inak/bbs_project/results/phylogenetic_tree/bbs8_tree.pdf",
+       plot = bbs8_tree,
+       height = 3,
+       width = 9)
+ggsave(filename = "/home/inak/bbs_project/results/phylogenetic_tree/bbs9_tree.pdf",
+       plot = bbs9_tree,
+       height = 3,
+       width = 9)
 
 ```
 

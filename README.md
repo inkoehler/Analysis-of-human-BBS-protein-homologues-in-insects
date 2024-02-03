@@ -24,6 +24,7 @@ human genome used: GRCh38.p14
 --> computational heavy steps were performed on [MogonII](https://hpc.uni-mainz.de/high-performance-computing/systeme/#MOGON_II-Cluster)
 
 ### Blast
+- create db with module BLAST+ 2.11 `makeblastdb -in am.faa -dbtype prot -parse_seqids``
 - parameters: `-evalue 1e-3 -outfmt 6 -num_alignments 5`
 - reciprocal search:
     - target: human + query: insect
@@ -46,14 +47,11 @@ human genome used: GRCh38.p14
         - sequence similarity of each bbs gene per species
         - data table created from the script that is used to create the plots
 
+- use `awk '/"A. gambiae"/ { print $2 }' bbs_results_BLAST.txt | sort | uniq | sed 's/"//g' > /home/inak/bbs_project/data/fasta/agambiae_bbs_genes.txt` to extract gene names matching the human BBS genes
+
 
 ## TODO
 
-- rewrite script
-- beautify figures
-- add OrthoFinder results to figure
-- genereate phylogenetic tree (similar to [this](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8670302/#sup1) paper) (newick format)
-- plot tree
 - add methods and results part of phylogenetic reconstruction to paper
 
 
