@@ -1,0 +1,367 @@
+
+
+1. Load libraries:
+
+```{r, message = FALSE}
+library(tidyverse)
+library(ggpubr)
+library(reshape2)
+```
+
+2. Load data:
+
+```{r, message = FALSE}
+slater_data <- read.table(file = "input/rna_data/slater_data.txt",
+                          header = TRUE)
+
+lewis_data <- read.table(file = "input/rna_data/lewis_et_al_dataset.txt",
+                          header = TRUE)
+```
+
+3. Check distribution of counts:
+
+```{r, message = FALSE}
+slater_data$row_means <- slater_data %>%
+  select(-Gene_ID) %>%
+  rowMeans()
+
+summary(slater_data$row_means)
+
+lewis_data$row_means <- lewis_data %>%
+  select(-Gene_ID) %>%
+  rowMeans()
+
+summary(lewis_data$row_means)
+```
+
+4. Subset BBS proteins:
+
+```{r, message = FALSE}
+bbs_proteins <- c("LOC551897",
+                  "LOC551495",
+                  "LOC411651",
+                  "LOC413899",
+                  "LOC113218625")
+
+## Subset genes of interest:
+slater_bbs <- subset(slater_data,
+       Gene_ID %in% bbs_proteins)
+
+## Plot:
+ggplot(data = slater_data,
+       aes(x = row_means)) +
+  geom_density()
+
+## Split by sex and tissue:
+slater_queen_gonad <- slater_data %>%
+  select(Gene_ID,
+         queen1_gonad,
+         queen7_gonad,
+         queen8_gonad)
+slater_queen_gonad$status <-  "gonad"
+slater_queen_gonad$sex <-  "queen"
+slater_queen_gonad$row_means <- slater_queen_gonad %>%
+  select(-Gene_ID,
+         -status,
+         -sex) %>%
+  rowMeans()
+
+slater_drone_gonad <- slater_data %>%
+  select(Gene_ID,
+         drone3_gonad,
+         drone4_gonad,
+         drone5_gonad,
+         drone6_gonad,
+         drone7_gonad)
+slater_drone_gonad$status <-  "gonad"
+slater_drone_gonad$sex <-  "drone"
+slater_drone_gonad$row_means <- slater_drone_gonad %>%
+  select(-Gene_ID,
+         -status,
+         -sex) %>%
+  rowMeans()
+
+slater_queen_brain <- slater_data %>%
+  select(Gene_ID,
+         queen2_brain,
+         queen3_brain,
+         queen4_brain,
+         queen5_brain)
+slater_queen_brain$status <-  "brain"
+slater_queen_brain$sex <-  "queen"
+slater_queen_brain$row_means <- slater_queen_brain %>%
+  select(-Gene_ID,
+         -status,
+         -sex) %>%
+  rowMeans()
+
+slater_drone_brain <- slater_data %>%
+  select(Gene_ID,
+         drone1_brain,
+         drone2_brain,
+         drone8_brain,
+         drone9_brain)
+slater_drone_brain$status <-  "brain"
+slater_drone_brain$sex <-  "drone"
+slater_drone_brain$row_means <- slater_drone_brain %>%
+  select(-Gene_ID,
+         -status,
+         -sex) %>%
+  rowMeans()
+
+
+slater_drone_brain_plot <- ggplot(data = slater_drone_brain,
+       aes(x = row_means)) +
+    xlim(0, 25) +
+  geom_density(fill = "blue",
+               alpha = 0.2) +
+  geom_density(data = subset(slater_drone_brain,
+                             Gene_ID %in% bbs_proteins))
+
+slater_drone_gonad_plot <- ggplot(data = slater_drone_gonad,
+       aes(x = row_means)) +
+    xlim(0, 25) +
+  geom_density(fill = "blue",
+               alpha = 0.2) +
+  geom_density(data = subset(slater_drone_gonad,
+                             Gene_ID %in% bbs_proteins))
+
+slater_queen_brain_plot <- ggplot(data = slater_queen_brain,
+       aes(x = row_means)) +
+    xlim(0, 25) +
+  geom_density(fill = "blue",
+               alpha = 0.2) +
+  geom_density(data = subset(slater_queen_brain,
+                             Gene_ID %in% bbs_proteins))
+
+slater_queen_gonad_plot <- ggplot(data = slater_queen_gonad,
+       aes(x = row_means)) +
+  xlim(0, 25) +
+  geom_density(fill = "blue",
+               alpha = 0.2) +
+  geom_density(data = subset(slater_drone_gonad,
+                             Gene_ID %in% bbs_proteins))
+
+
+#
+ggarrange(slater_queen_gonad_plot,
+          slater_drone_gonad_plot,
+          slater_queen_brain_plot,
+          slater_drone_brain_plot,
+          nrow = 2,
+          ncol = 2)
+```
+
+5. Plot heatmap:
+
+```{r, message = FALSE}
+## Melt dataframe:
+slater_melt <-  melt(slater_data)
+
+## Add 'tissue':
+slater_melt$tissue <- gsub(pattern = ".*_",
+                           replacement = "",
+                           slater_melt$variable)
+
+## Add 'sex':
+slater_melt$sex <- gsub(pattern = "[0-9]_.*",
+                           replacement = "",
+                           slater_melt$variable)
+
+## Subset bbs proteins:
+slater_melt_bbs <-  subset(slater_melt,
+                           Gene_ID %in% bbs_proteins)
+
+## Reorder levels:
+slater_melt_bbs$variable <- factor(slater_melt_bbs$variable,
+                                   levels = c("queen1_gonad",
+                                              "queen7_gonad",
+                                              "queen8_gonad",
+                                              "drone3_gonad",
+                                              "drone4_gonad",
+                                              "drone5_gonad",
+                                              "drone6_gonad",
+                                              "drone7_gonad",
+                                              "queen2_brain",
+                                              "queen3_brain",
+                                              "queen4_brain",
+                                              "queen5_brain",
+                                              "queen6_brain",
+                                              "drone1_brain",
+                                              "drone2_brain",
+                                              "drone8_brain",
+                                              "drone9_brain",
+                                              "row_means"))
+
+b <- c(4, 8, 12)
+
+## Remove row means:
+slater_melt_bbs <- subset(slater_melt_bbs,
+                          variable != "row_means")
+
+## Update gene name:
+slater_melt_bbs$Gene_ID <- gsub(pattern = "LOC411651",
+                                replacement = "LOC411651 (BBS7)",
+                                slater_melt_bbs$Gene_ID)
+
+slater_melt_bbs$Gene_ID <- gsub(pattern = "LOC413899",
+                                replacement = "LOC413899 (BBS8)",
+                                slater_melt_bbs$Gene_ID)
+
+slater_melt_bbs$Gene_ID <- gsub(pattern = "LOC551495",
+                                replacement = "LOC551495 (BBS5)",
+                                slater_melt_bbs$Gene_ID)
+
+slater_melt_bbs$Gene_ID <- gsub(pattern = "LOC551897",
+                                replacement = "LOC551897 (BBS4)",
+                                slater_melt_bbs$Gene_ID)
+
+## Remove underscore in sample ID:
+slater_melt_bbs$variable <-  gsub(pattern = "_",
+                                  replacement = " ",
+                                  slater_melt_bbs$variable)
+
+slater_melt_bbs$variable <- factor(slater_melt_bbs$variable,
+                                   levels = c("queen1 gonad",
+                                              "queen7 gonad",
+                                              "queen8 gonad",
+                                              "drone3 gonad",
+                                              "drone4 gonad",
+                                              "drone5 gonad",
+                                              "drone6 gonad",
+                                              "drone7 gonad",
+                                              "queen2 brain",
+                                              "queen3 brain",
+                                              "queen4 brain",
+                                              "queen5 brain",
+                                              "queen6 brain",
+                                              "drone1 brain",
+                                              "drone2 brain",
+                                              "drone8 brain",
+                                              "drone9 brain"))
+
+## Plot data:
+slater_tile_plot <- ggplot(data = slater_melt_bbs,
+       aes(x = variable,
+           y = Gene_ID,
+           fill = value)) +
+  xlab(label = "Sample ID") +
+  ylab(label = "Gene ID") +
+  geom_tile(aes(fill = value), colour = "white") +
+  geom_vline(xintercept = 8.5,
+             linetype = "dashed",
+             colour = "navy") +
+scale_fill_gradientn(limits = c(4,12),
+  colours=c("black", "white", "red"),
+  breaks=b, labels=format(b)) +
+theme(legend.title = element_text(size = 12,
+                                  face = "bold"),
+        axis.text.y = element_text(size = 8),
+        legend.text = element_text(size = 12,
+                                   face = "plain"),
+        plot.title = element_text(size = 12),
+        axis.title = element_text(size = 12,
+                                face = "bold"),
+        axis.text.x = element_text(size = 8,
+                                   angle = 45,
+                                   hjust = 1)) +
+        theme(legend.position = "top") 
+
+## Update legend name:
+slater_tile_plot <- slater_tile_plot + labs(fill = "VST-gene level counts")
+
+dir.create(path = "results")
+ggsave(file = "results/slater_tile_plot.pdf",
+       plot = slater_tile_plot,
+       height = 6,
+       width = 8,
+       dpi = 600)
+```
+
+Perform the same for the Lewis dataset:
+
+```{r, message = FALSE}
+## Melt dataframe:
+lewis_melt <-  melt(lewis_data)
+
+## Subset bbs proteins:
+lewis_melt_bbs <-  subset(lewis_melt,
+                           Gene_ID %in% bbs_proteins)
+
+d <- c(4, 6, 8)
+
+## Update gene name:
+lewis_melt_bbs$Gene_ID <- gsub(pattern = "LOC411651",
+                                replacement = "LOC411651 (BBS7)",
+                                lewis_melt_bbs$Gene_ID)
+
+lewis_melt_bbs$Gene_ID <- gsub(pattern = "LOC413899",
+                                replacement = "LOC413899 (BBS8)",
+                                lewis_melt_bbs$Gene_ID)
+
+lewis_melt_bbs$Gene_ID <- gsub(pattern = "LOC551495",
+                                replacement = "LOC551495 (BBS5)",
+                                lewis_melt_bbs$Gene_ID)
+
+lewis_melt_bbs$Gene_ID <- gsub(pattern = "LOC551897",
+                                replacement = "LOC551897 (BBS4)",
+                                lewis_melt_bbs$Gene_ID)
+
+## Update name for plotting:
+lewis_melt_bbs$variable <- gsub(pattern = "_",
+                                replacement = " ",
+                                lewis_melt_bbs$variable)
+
+## Remove row means:
+lewis_melt_bbs <- subset(lewis_melt_bbs,
+                         variable != "row means")
+
+## Plot data:
+lewis_tile_plot <- ggplot(data = lewis_melt_bbs,
+       aes(x = variable,
+           y = Gene_ID,
+           fill = value)) +
+  xlab(label = "Sample ID") +
+  ylab(label = "Gene ID") +
+  geom_tile(aes(fill = value), colour = "white") +
+  #geom_vline(xintercept = 8.5,
+  #           linetype = "dashed",
+  #           colour = "navy") +
+scale_fill_gradientn(limits = c(4,8),
+  colours=c("black", "white", "blue"),
+  breaks = d, labels = format(d)) +
+theme(legend.title = element_text(size = 12,
+                                  face = "bold"),
+        axis.text.y = element_text(size = 8),
+        legend.text = element_text(size = 12,
+                                   face = "plain"),
+        plot.title = element_text(size = 12),
+        axis.title = element_text(size = 12,
+                                face = "bold"),
+        axis.text.x = element_text(size = 8,
+                                   angle = 45,
+                                   hjust = 1)) +
+        theme(legend.position = "top") 
+
+## Update legend name:
+lewis_tile_plot <- lewis_tile_plot + labs(fill = "VST-gene level counts")
+
+## Save:
+dir.create(path = "results")
+ggsave(file = "results/lewis_tile_plot.pdf",
+       plot = lewis_tile_plot,
+       height = 4,
+       width = 6,
+       dpi = 600)
+```
+
+Combine into the same plot:
+
+```{r, message = FALSE}
+ggarrange(slater_tile_plot,
+          lewis_tile_plot,
+          nrow = 2,
+          ncol = 1,
+          labels = c("A",
+                     "B"))
+```

@@ -1,0 +1,278 @@
+
+
+1. Load libraries:
+
+```{r, message = FALSE}
+library(tidyverse)
+library(reshape2)
+library(ggpubr)
+library(stringr)
+```
+
+2. Load data:
+
+```{r, message = FALSE}
+## Read in species list:
+species_list <- read.table(file = "SpeciesIDs.txt",
+                           header = FALSE)
+
+species_list_ordered <- species_list[order(species_list$V1), ]
+
+## Add species:
+data_sub$species <-  gsub(pattern = ".fa",
+                          replacement = "",
+                          species_list_ordered$V2)
+
+data_sub$species <-  str_to_title(data_sub$species) 
+
+## Update species names:
+data_sub$species <-  gsub(pattern = "_",
+                          replacement = ". ",
+                          data_sub$species)
+```
+
+3. Load percentage identity data:
+
+```{r, message = FALSE}
+bbs1_data <- read.table(file = "5_29768_match.txt",
+                   header = FALSE)
+str(bbs1_data)
+bbs1_data$locus <-  "bbs1"
+bbs1_data$species <-  gsub(pattern = ".fa",
+                          replacement = "",
+                          species_list_ordered$V2)
+
+bbs1_rep_data <- rep_data <- read.table(file = "5_29768_rep_match.txt",
+                   header = FALSE)
+str(bbs1_rep_data)
+bbs1_rep_data$locus <-  "bbs1"
+
+bbs2_data <- read.table(file = "5_30321_match.txt",
+                   header = FALSE)
+str(bbs2_data)
+bbs2_data$locus <-  "bbs2"
+bbs2_data$species <-  gsub(pattern = ".fa",
+                          replacement = "",
+                          species_list_ordered$V2[-8])
+
+bbs2_rep_data <- read.table(file = "5_30321_rep_match.txt",
+                   header = FALSE)
+str(bbs2_rep_data)
+bbs2_rep_data$locus <-  "bbs2"
+
+bbs4_data <- read.table(file = "5_30864_match.txt",
+                   header = FALSE)
+str(bbs4_data)
+bbs4_data$locus <-  "bbs4"
+bbs4_data$species <-  gsub(pattern = ".fa",
+                          replacement = "",
+                          species_list_ordered$V2)
+
+bbs4_rep_data <- read.table(file = "5_30864_rep_match.txt",
+                   header = FALSE)
+str(bbs4_rep_data)
+bbs4_rep_data$locus <-  "bbs4"
+
+
+bbs5_data <- read.table(file = "5_30864_match.txt",
+                   header = FALSE)
+str(bbs5_data)
+bbs5_data$locus <-  "bbs5"
+bbs5_data$species <-  gsub(pattern = ".fa",
+                          replacement = "",
+                          species_list_ordered$V2)
+
+bbs5_rep_data <- read.table(file = "5_30864_rep_match.txt",
+                   header = FALSE)
+str(bbs5_rep_data)
+bbs5_rep_data$locus <-  "bbs5"
+
+
+bbs7_data <- read.table(file = "5_33401_match.txt",
+                   header = FALSE)
+str(bbs7_data)
+bbs7_data$V2
+bbs7_data$locus <- "bbs7"
+bbs7_data$species <-  gsub(pattern = ".fa",
+                          replacement = "",
+                          species_list_ordered$V2[-8])
+
+bbs7_rep_data <- rep_data <- read.table(file = "5_33401_rep_match.txt",
+                   header = FALSE)
+str(bbs7_rep_data)
+bbs7_rep_data$locus <- "bbs7"
+
+
+bbs10_data <- read.table(file = "5_29793_match.txt",
+                   header = FALSE)
+str(bbs10_data)
+bbs10_data$locus <- "bbs10"
+bbs10_data$species <-  gsub(pattern = ".fa",
+                          replacement = "",
+                          species_list_ordered$V2)
+
+bbs10_rep_data <- rep_data <- read.table(file = "5_29793_rep_match.txt",
+                   header = FALSE)
+str(bbs10_rep_data)
+bbs10_rep_data$locus <-  "bbs10"
+
+## Combine:
+combined_data <-  rbind(bbs1_data,
+                        bbs2_data,
+                        bbs4_data,
+                        bbs5_data,
+                        bbs7_data,
+                        bbs10_data)
+
+combined_rep_data <-  rbind(bbs1_rep_data,
+                            bbs2_rep_data,
+                            bbs4_rep_data,
+                            bbs5_rep_data,
+                            bbs7_rep_data,
+                            bbs10_rep_data)
+```
+
+4. Subset columns relevant for plotting:
+
+```{r, message = FALSE}
+## Subset and combine:
+data_sub <- combined_data %>%
+  select(V1,
+         V2,
+         V3,
+         V11,
+         V12,
+         locus,
+         species)
+## Update column names:
+colnames(data_sub) <- c("human_bbs",
+                        "insect_bbs",
+                        "percent_id",
+                        "evalue",
+                        "bitscore",
+                        "locus",
+                        "species")
+
+## Add seq similarity from reciprocal diamond blast":
+data_sub$rep_perc_id <- combined_rep_data$V3
+data_sub$rep_evalue <- combined_rep_data$V11
+data_sub$rep_bitscore <- combined_rep_data$V12
+
+data_sub$species <-  str_to_title(data_sub$species) 
+
+## Update species names:
+data_sub$species <-  gsub(pattern = "_",
+                          replacement = ". ",
+                          data_sub$species)
+
+## Add additional taxonomic information:
+data_sub$taxonomy <- c("Diptera",
+                       "Hymenoptera",
+                       "Phthiraptera",
+                       "Hymenoptera",
+                       "Coleoptera",
+                       "Hemiptera",
+                       "Hymenoptera",
+                       "Diptera",
+                       "Primate",
+                       "Rodentia",
+                       "Lepidoptera",
+                       "Hymenoptera",
+                       "Hymenoptera")
+```
+
+5. Plot data:
+
+```{r, message = FALSE}
+## Remove human matches for plotting:
+data_sub <- subset(data_sub,
+                   human_bbs != insect_bbs)
+
+## Remove other human matches:
+data_sub <- subset(data_sub,
+                   !(insect_bbs %in% c("5_30321")))
+
+## Update levels for plots:
+data_sub$locus <- factor(data_sub$locus,
+                         levels = unique(data_sub$locus))
+
+
+## a) plot by gene:
+seq_sim_plot <- ggplot(data = data_sub,
+       aes(x = percent_id,
+           y = rep_perc_id)) +
+  xlab("Species 1 - Percentage ID [%]") +
+  ylab("Species 2 - Percentage ID [%]") +
+  geom_point(aes(fill = species),
+             alpha = 0.8,
+       colour = "black",
+       pch = 21,
+       size = 5) +
+  theme_bw() +
+  theme(axis.title = element_text(face = "bold",
+                                  size = 12),
+        legend.text = element_text(face = "italic",
+                                   size = 10),
+        legend.position = "bottom") +
+  facet_wrap(~locus)
+
+bbs_boxplot <- ggplot(data = subset(data_sub,
+                    percent_id < 60),
+       aes(x = locus,
+           y = percent_id)) +
+  xlab("Locus") +
+  ylab("Percentage ID [%]") +
+  geom_boxplot() +
+  theme_bw() +
+  theme(axis.title = element_text(face = "bold",
+                                  size = 12)) +
+  stat_compare_means()
+
+combined_plot <- ggarrange(seq_sim_plot,
+          bbs_boxplot,
+          ncol = 2,
+          nrow = 1,
+          widths = c(1.5,
+                     1),
+          common.legend = TRUE,
+          labels = c("A",
+                     "B"))
+
+## Save image:
+dir.create("results")
+ggsave(filename = "results/multipanel_scatterplot_by_gene.png",
+       plot = seq_sim_plot,
+       height = 8,
+       width = 12)
+
+ggsave(filename = "results/multipanel_scatter_boxplot_by_gene.png",
+       plot = combined_plot,
+       height = 8,
+       width = 12)
+
+## b) plot by species:
+seq_sim_plot2 <- ggplot(data = data_sub,
+       aes(x = percent_id,
+           y = rep_perc_id)) +
+  xlab("Species 1 - Percentage ID [%]") +
+  ylab("Species 2 - Percentage ID [%]") +
+  geom_point(aes(fill = locus), 
+             alpha = 0.8,
+       colour = "black",
+       pch = 21,
+       size = 5) +
+  theme_bw() +
+  theme(axis.title = element_text(face = "bold",
+                                  size = 12)) +
+  facet_wrap(~species)
+
+## Italicise grid:
+seq_sim_plot2 <- seq_sim_plot2 +
+  theme(strip.text = element_text(face = "italic"))
+
+## Save image:
+ggsave(filename = "results/multipanel_scatterplot_by_species.png",
+       plot = seq_sim_plot2,
+       height = 8,
+       width = 12)
+```
